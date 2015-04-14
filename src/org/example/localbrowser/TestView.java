@@ -39,8 +39,8 @@ public class TestView extends View {
 	}
 
 	public void onDraw(Canvas canvas) {
-		testLinearGradient(canvas);
-		//testRadialGradient(canvas);
+		//testLinearGradient(canvas);
+		testRadialGradient(canvas);
 		//testSweepGradient(canvas);
 	}
 	
