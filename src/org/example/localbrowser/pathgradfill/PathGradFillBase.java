@@ -92,4 +92,31 @@ public abstract class PathGradFillBase {
 		canvas.drawPath(path, fillPaint);
 		canvas.restore();
 	}
+	
+	/**
+	 * 求垂足
+	 * @param gradCenter
+	 * @param lineStart
+	 * @param lineEnd
+	 * @return
+	 */
+	protected PointF getFootPoint(PointF gradCenter, PointF lineStart, PointF lineEnd) {
+		PointF destPoint = new PointF();
+		if (lineStart.x == lineEnd.x) { 
+			// 垂直
+			destPoint.set(lineStart.x, gradCenter.y);
+		} else if (lineStart.y == lineEnd.y) {
+			// 水平
+			destPoint.set(gradCenter.x, lineStart.y);
+		} else {
+			// 斜率公式:k=(y2-y1)/(x2-x1)
+			float k = (lineEnd.y-lineStart.y) / (lineEnd.x-lineStart.x); 
+			
+			//设目标坐标（x,y）,（x3,y3）求过两点直线方程的算法
+			//(x-x0)/(x3-x0)=(y-y0)/(y3-y0)
+			//k1=(y3-y)/(x3-x)，k*k1=-1 -> x = k*(y3-y) + x3
+		}
+		
+		return destPoint;
+	}
 }

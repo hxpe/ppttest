@@ -46,7 +46,7 @@ public class TestView extends View {
 	}
 
 	public void onDraw(Canvas canvas) {
-		testRectGradFill(canvas);
+		testDrawLineLinearGradient(canvas);
 	}
 	
 	private void testRectGradFill(Canvas canvas) {
@@ -95,6 +95,32 @@ public class TestView extends View {
 		
 		CircleGradFill gradFill = new CircleGradFill();
 		gradFill.gradFill(path, canvas, p, dstRect, fillToRect, tileRect, colors, positions);
+	}
+	
+	private void testDrawLineLinearGradient(Canvas canvas) {
+		Paint p = new Paint();
+
+		int[] colors = new int[3];
+		float[] positions = new float[3];
+
+		colors[0] = Color.BLUE;
+		colors[1] = Color.YELLOW;
+		colors[2] = Color.GREEN;
+		positions[0] = 0f;
+		positions[1] = 0.5f;
+		positions[2] = 1f;
+		float midY = this.getHeight() / 2;
+		float len = this.getWidth();
+		LinearGradient shader = new LinearGradient(0, midY, len, midY, colors,
+				positions, TileMode.MIRROR);
+		Matrix matrix = new Matrix();
+		matrix.setRotate(0, len / 2, midY);
+		shader.setLocalMatrix(matrix);
+
+		p.setShader(shader);
+		canvas.scale(0.5f, 1f);
+		canvas.rotate(15);
+		canvas.drawLine(0, midY, len, midY, p);
 	}
 	
 	private void testLinearGradient(Canvas canvas) {
