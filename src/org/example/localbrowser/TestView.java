@@ -1,7 +1,7 @@
 package org.example.localbrowser;
 
-import org.example.localbrowser.gradfill.CircleGradFill;
-import org.example.localbrowser.gradfill.RectGradFill;
+import org.example.localbrowser.pathgradfill.CircleGradFill;
+import org.example.localbrowser.pathgradfill.RectGradFill;
 
 import android.content.Context;
 import android.graphics.Canvas;

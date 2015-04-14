@@ -1,4 +1,4 @@
-package org.example.localbrowser.gradfill;
+package org.example.localbrowser.pathgradfill;
 
 import android.graphics.Canvas;
 import android.graphics.LinearGradient;
