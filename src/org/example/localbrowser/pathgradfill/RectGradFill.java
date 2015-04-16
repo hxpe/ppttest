@@ -28,6 +28,8 @@ public class RectGradFill extends PathGradFillBase {
 		points[3] = new PointF(tileRect.left, tileRect.bottom);
 		setPoints(points);
 		
+		this.canvas.save();
+		this.canvas.clipPath(this.path);
 		gradFillForLinesPath(getCenter(), true);
 		
 		if (haveMoreTile()) {
@@ -38,6 +40,7 @@ public class RectGradFill extends PathGradFillBase {
 				}
 			});
 		}
+		this.canvas.restore();
 	}
 	
 	@Override

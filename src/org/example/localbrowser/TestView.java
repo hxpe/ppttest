@@ -124,7 +124,7 @@ public class TestView extends View {
 		positions[1] = 0.5f;
 		positions[2] = 1f;
 		
-		RectF dstRect = new RectF(0, 0, this.getWidth(), this.getHeight());
+		RectF dstRect = new RectF(0, 0, this.getHeight(), this.getHeight());
 		Path path = new Path();
 		path.addRect(dstRect, Direction.CW);
 		
@@ -153,7 +153,7 @@ public class TestView extends View {
 		path.addRect(dstRect, Direction.CW);
 		
 		RectF fillToRect = new RectF(0.5f, 0.5f, 0.5f, 0.5f);
-		RectF tileRect = new RectF(0.25f, 0.25f, 0.25f, 0.25f);
+		RectF tileRect = new RectF(0f, 0f, 0f, 0f);
 		
 		CircleGradFill gradFill = new CircleGradFill(path, canvas, p, dstRect, fillToRect, tileRect, colors, positions);
 		gradFill.gradFill();
