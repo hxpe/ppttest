@@ -30,31 +30,13 @@ public class RectGradFill extends PathGradFillBase {
 		
 		gradFillForLinesPath(getCenter(), true);
 		
-		// 翻转铺满剩下区域，假设周围各平铺一次，应当覆盖大部分的应用了吧
-		PointF scalePoint = new PointF(tileRect.left, tileRect.top);
-		if (tileRect.left > dstRect.left) 
-			gradFillForLinesPath(getCenter(), true, scalePoint, -1, 1);
-		if (tileRect.top > dstRect.top)
-			gradFillForLinesPath(getCenter(), true, scalePoint, 1, -1);
-		if (tileRect.left > dstRect.left && tileRect.top > dstRect.top)
-			gradFillForLinesPath(getCenter(), true, scalePoint, -1, -1);
-		
-		scalePoint.set(tileRect.right, tileRect.bottom);
-		if (tileRect.bottom < dstRect.bottom)
-			gradFillForLinesPath(getCenter(), true, scalePoint, 1, -1);
-		if (tileRect.right < dstRect.right)
-			gradFillForLinesPath(getCenter(), true, scalePoint, -1, 1);
-		if (tileRect.bottom < dstRect.bottom && tileRect.right < dstRect.right)
-			gradFillForLinesPath(getCenter(), true, scalePoint, -1, -1);
-		
-		if (tileRect.top > dstRect.top && tileRect.right < dstRect.right) {
-			scalePoint.set(tileRect.right, tileRect.top);
-			gradFillForLinesPath(getCenter(), true, scalePoint, -1, -1);
-		}
-		
-		if (tileRect.bottom < dstRect.bottom && tileRect.left > dstRect.left) {
-			scalePoint.set(tileRect.left, tileRect.bottom);
-			gradFillForLinesPath(getCenter(), true, scalePoint, -1, -1);
+		if (haveMoreTile()) {
+			tileGradFill(new ITileFillAction() {
+				public void tileAction() {
+					gradFillForLinesPath(getCenter(), true);
+					
+				}
+			});
 		}
 	}
 	

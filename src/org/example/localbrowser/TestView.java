@@ -48,7 +48,7 @@ public class TestView extends View {
 	}
 
 	public void onDraw(Canvas canvas) {
-		testRectGradFill(canvas);
+		testCircleGradFill(canvas);
 	}
 	
 	private void testShapeGradFill(Canvas canvas) {
@@ -152,8 +152,8 @@ public class TestView extends View {
 		Path path = new Path();
 		path.addRect(dstRect, Direction.CW);
 		
-		RectF fillToRect = new RectF(0.5f, 0.25f, 0f, 0.25f);
-		RectF tileRect = new RectF(0.25f, 0, 0, 0);
+		RectF fillToRect = new RectF(0.5f, 0.5f, 0.5f, 0.5f);
+		RectF tileRect = new RectF(0.25f, 0.25f, 0.25f, 0.25f);
 		
 		CircleGradFill gradFill = new CircleGradFill(path, canvas, p, dstRect, fillToRect, tileRect, colors, positions);
 		gradFill.gradFill();

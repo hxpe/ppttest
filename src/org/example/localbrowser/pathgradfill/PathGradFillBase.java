@@ -9,6 +9,7 @@ import android.graphics.Path;
 import android.graphics.PointF;
 import android.graphics.RadialGradient;
 import android.graphics.RectF;
+import android.graphics.Path.Direction;
 import android.graphics.Shader.TileMode;
 
 /**
@@ -27,6 +28,10 @@ public abstract class PathGradFillBase {
 	private PointF[] points;
 	private Matrix matrix;
 	private PointF tempCenterF;
+	
+	static public interface ITileFillAction {
+		void tileAction();
+	}
 	
 	public PathGradFillBase(Path path, Canvas canvas, Paint fillPaint, 
 			RectF dstRect, RectF fillToRect, RectF tileRect,
@@ -67,15 +72,14 @@ public abstract class PathGradFillBase {
 	}
 	
 	/**
-	 * Circle渐变填充
+	 * 是否需要更多平铺填充，tileRect不等于或内含dstRect，则返回true
+	 * @return
 	 */
-	protected void fillForCircle(PointF centerF, float radius) {
-		RadialGradient shader = new RadialGradient(centerF.x, centerF.y,
-				radius, colors, positions, TileMode.MIRROR);
-		canvas.save();
-		fillPaint.setShader(shader);
-		canvas.drawPath(path, fillPaint);
-		canvas.restore();
+	protected boolean haveMoreTile() {
+		return tileRect.left > dstRect.left ||
+				tileRect.top > dstRect.top ||
+				tileRect.right < dstRect.right ||
+				tileRect.bottom < dstRect.bottom;
 	}
 	
 	/**
@@ -119,22 +123,50 @@ public abstract class PathGradFillBase {
 	}
 	
 	/**
+	 * tileRect周围的区域重复应用平布动作
+	 */
+	protected void tileGradFill(ITileFillAction action) {
+		if (action == null)
+			return;
+		// 翻转铺满剩下区域，假设周围各平铺一次，应当覆盖大部分的应用了吧
+		if (tileRect.left > dstRect.left) 
+			rotateToTile(action, tileRect.left, tileRect.top, -1, 1);
+		if (tileRect.top > dstRect.top)
+			rotateToTile(action, tileRect.left, tileRect.top, 1, -1);
+		if (tileRect.left > dstRect.left && tileRect.top > dstRect.top)
+			rotateToTile(action, tileRect.left, tileRect.top, -1, -1);
+		
+		if (tileRect.bottom < dstRect.bottom)
+			rotateToTile(action, tileRect.right, tileRect.bottom, 1, -1);
+		if (tileRect.right < dstRect.right)
+			rotateToTile(action, tileRect.right, tileRect.bottom, -1, 1);
+		if (tileRect.bottom < dstRect.bottom && tileRect.right < dstRect.right)
+			rotateToTile(action, tileRect.right, tileRect.bottom, -1, -1);
+		
+		if (tileRect.top > dstRect.top && tileRect.right < dstRect.right) 
+			rotateToTile(action, tileRect.right, tileRect.top, -1, -1);
+		
+		if (tileRect.bottom < dstRect.bottom && tileRect.left > dstRect.left) 
+			rotateToTile(action, tileRect.left, tileRect.bottom, -1, -1);
+	}
+	
+	/**
 	 * 附加翻转矩阵重新填充
 	 */
-	protected void gradFillForLinesPath(PointF gradCenter, boolean closePath, PointF applyScalePointF, float dx, float dy) {
-		if (applyScalePointF == null)
+	private void rotateToTile(ITileFillAction action, float rotateX, float rotateY, float dx, float dy) {
+		if (action == null)
 			return;
 		if (matrix == null)
 			matrix = new Matrix();
 		else 
 			matrix.reset();
-		matrix.preTranslate(applyScalePointF.x, applyScalePointF.y);
+		matrix.preTranslate(rotateX, rotateY);
 		matrix.preScale(dx, dy);
-		matrix.preTranslate(-applyScalePointF.x, -applyScalePointF.y);
+		matrix.preTranslate(-rotateX, -rotateY);
 		
 		canvas.save();
 		canvas.concat(matrix);
-		gradFillForLinesPath(gradCenter, closePath);
+		action.tileAction();
 		canvas.restore();
 	}
 	
