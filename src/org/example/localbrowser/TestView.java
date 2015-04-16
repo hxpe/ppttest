@@ -1,10 +1,14 @@
 package org.example.localbrowser;
 
+import java.io.File;
+
 import org.example.localbrowser.pathgradfill.CircleGradFill;
 import org.example.localbrowser.pathgradfill.RectGradFill;
 import org.example.localbrowser.pathgradfill.ShapeGradFill;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ComposeShader;
@@ -45,6 +49,18 @@ public class TestView extends View {
 
 	public TestView(Context context, AttributeSet attrs) {
 		super(context, attrs);
+	}
+	
+	private void testRecolor(Canvas canvas) {
+		File file = new File("/storage/sdcard1/hxpe/test1/test.png");
+		if (file.exists()) {
+			Bitmap temp = BitmapFactory.decodeFile("/storage/sdcard1/hxpe/test1/test.png");
+			if (temp != null) {
+				Paint p = new Paint();
+				p.setColor(Color.RED);
+				canvas.drawBitmap(temp, 0, 0, p);
+			}
+		}
 	}
 
 	public void onDraw(Canvas canvas) {
@@ -148,12 +164,12 @@ public class TestView extends View {
 		positions[1] = 0.5f;
 		positions[2] = 1f;
 		
-		RectF dstRect = new RectF(0, 0, canvas.getHeight(), canvas.getHeight());
+		RectF dstRect = new RectF(0, 0, canvas.getHeight(), canvas.getHeight() / 3);
 		Path path = new Path();
 		path.addRect(dstRect, Direction.CW);
 		
-		RectF fillToRect = new RectF(0.5f, 0.5f, 0.5f, 0.5f);
-		RectF tileRect = new RectF(0f, 0f, 0f, 0f);
+		RectF fillToRect = new RectF(1f, 1f, 0f, 0f);
+		RectF tileRect = new RectF(0, 0, -1f, -1f);
 		
 		CircleGradFill gradFill = new CircleGradFill(path, canvas, p, dstRect, fillToRect, tileRect, colors, positions);
 		gradFill.gradFill();

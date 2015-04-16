@@ -22,12 +22,14 @@ public class CircleGradFill extends PathGradFillBase
 			int[] colors, float[] positions) {
 		super(path, canvas, fillPaint, dstRect, fillToRect, tileRect, colors, positions);
 		
-		// 对于circle填充，tileRect进行修正
-		float radius = (float)Math.sqrt((this.tileRect.width() / 2) *(this.tileRect.width() / 2) +
-				(this.tileRect.height() / 2) * (this.tileRect.height() / 2));
-		float centerX = this.tileRect.centerX();
-		float centerY = this.tileRect.centerY();
-		this.tileRect.set(centerX - radius, centerY - radius, centerX + radius, centerY + radius);
+		if (haveMoreTile()) {
+			// 对于circle填充，tileRect进行修正
+			float radius = (float)Math.sqrt((this.tileRect.width() / 2) *(this.tileRect.width() / 2) +
+					(this.tileRect.height() / 2) * (this.tileRect.height() / 2));
+			float centerX = this.tileRect.centerX();
+			float centerY = this.tileRect.centerY();
+			this.tileRect.set(centerX - radius, centerY - radius, centerX + radius, centerY + radius);
+		}
 	}
 	
 	@Override
@@ -74,6 +76,33 @@ public class CircleGradFill extends PathGradFillBase
 	}
 	
 	private float getTileRadius() {
-		return tileRect.width() / 2;
+		float focusRadius = tileRect.width() / 2;
+		if (!haveMoreTile()) {
+			// 取离焦点最远的那个角来计算渐变半径
+			float destX = fillToRect.centerX();
+			float destY = fillToRect.centerY();
+			if (destX < tileRect.width() / 2) {
+				if (destY < tileRect.height() / 2) {
+					destX = tileRect.right;
+					destY = tileRect.bottom;
+				} else {
+					destX = tileRect.right;
+					destY = tileRect.top;
+				}
+			} else{
+				if (destY < tileRect.height() / 2) {
+					destX = 0;
+					destY = tileRect.bottom;
+				} else {
+					destX = 0;
+					destY = 0;
+				}
+			}
+			destX += tileRect.left;
+			destY += tileRect.top;
+			focusRadius = (float)Math.sqrt((fillToRect.centerX() - destX) *(fillToRect.centerX() - destX) +
+					(fillToRect.centerY() - destY) * (fillToRect.centerY() - destY));
+		}
+		return focusRadius;
 	}
 }
