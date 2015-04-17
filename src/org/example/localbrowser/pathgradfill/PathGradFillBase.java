@@ -39,6 +39,8 @@ public abstract class PathGradFillBase {
 		this.dstRect = dstRect;
 		this.colors = colors;
 		this.positions = positions;
+		// 从IO读上来的位置可能是乱序的，调整下
+		sortPositionForColors(this.positions, this.colors);
 		
 		if (fillToRect == null)
 			fillToRect = new RectF(0, 0, 1.0f, 1.0f); // 默认左上角
@@ -56,8 +58,8 @@ public abstract class PathGradFillBase {
 		return this.points;
 	}
 	
-	abstract void gradFill();
-	abstract float getFocusPercent();
+	public abstract void gradFill();
+	protected abstract float getFocusPercent();
 	
 	/**
 	 * Circle渐变的中心点
@@ -183,6 +185,29 @@ public abstract class PathGradFillBase {
 		trianglePath.close();
 		
 		lineGradFill(trianglePath, gradCenter, footPointF, 0, 0);
+	}
+	
+	/**
+	 * 以positions为基准排序两个数组
+	 * @param positions
+	 * @param colors
+	 */
+	private void sortPositionForColors(float[] positions, int[] colors) {
+		if (positions.length == 0 || colors.length != positions.length)
+			return;
+		for (int i = 0; i < positions.length; i++) {
+			for (int j = i + 1; j < positions.length; j++) {
+				if (positions[i] > positions[j]) {
+					float tempPos = positions[i];
+					positions[i] = positions[j];
+					positions[j] = tempPos;
+					
+					int tempColor = colors[i];
+					colors[i] = colors[j];
+					colors[j] = tempColor;
+				}
+			}
+		}
 	}
 	
 	protected void lineGradFill(Path clippath, PointF start, PointF end,

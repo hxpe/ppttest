@@ -77,7 +77,7 @@ public class TestView extends View {
 		colors[0] = Color.BLUE;
 		colors[1] = Color.YELLOW;
 		colors[2] = Color.GREEN;
-		positions[0] = 0f;
+		positions[0] = 0.7f;
 		positions[1] = 0.5f;
 		positions[2] = 1f;
 		
@@ -86,10 +86,10 @@ public class TestView extends View {
 		path.addRect(dstRect, Direction.CW);
 		
 		RectF fillToRect = null;
-		RectF tileRect = new RectF(1f/3, 1f/3, 1f/3, 1f/3);
+		RectF tileRect = null;new RectF(1f/3, 1f/3, 1f/3, 1f/3);
 		
 		LinGradFill gradFill = new LinGradFill(path, canvas, p, dstRect, fillToRect, tileRect, colors, positions);
-		gradFill.setLinParam(true, 315);
+		gradFill.setLinParam(true, 90);
 		gradFill.gradFill();
 	}
 	
