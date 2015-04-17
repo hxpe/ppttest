@@ -1,15 +1,12 @@
 package org.example.localbrowser.pathgradfill;
 
-import android.R.integer;
 import android.graphics.Canvas;
 import android.graphics.LinearGradient;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
-import android.graphics.RadialGradient;
 import android.graphics.RectF;
-import android.graphics.Path.Direction;
 import android.graphics.Shader.TileMode;
 
 /**
@@ -44,7 +41,7 @@ public abstract class PathGradFillBase {
 		this.positions = positions;
 		
 		if (fillToRect == null)
-			fillToRect = new RectF(1.0f, 1.0F, 0, 0); // 默认右下角
+			fillToRect = new RectF(0, 0, 1.0f, 1.0f); // 默认左上角
 		if (tileRect == null)
 			tileRect = new RectF(); // 默认占满dstRect
 		this.fillToRect = transPercentageRect(fillToRect, dstRect);
@@ -111,19 +108,17 @@ public abstract class PathGradFillBase {
 		PointF starF = points[0];
 		for (int i = 1; i < points.length; i++) {
 			PointF endF = points[i];
-			gradFillForTriangle(path, canvas, fillPaint, colors, positions, 
-					gradCenter, starF, endF);
+			gradFillForTriangle(gradCenter, starF, endF);
 			starF = endF;
 		}
 		
 		if (closePath) {
-			gradFillForTriangle(path, canvas, fillPaint, colors, positions, 
-					gradCenter, starF, points[0]);
+			gradFillForTriangle(gradCenter, starF, points[0]);
 		}
 	}
 	
 	/**
-	 * tileRect周围的区域重复应用平布动作
+	 * tileRect周围的区域重复应用平铺动作
 	 */
 	protected void tileGradFill(ITileFillAction action) {
 		if (action == null)
@@ -173,11 +168,9 @@ public abstract class PathGradFillBase {
 	/**
 	 * 一个点到一条边的渐变，这里定义为点到垂足的渐变，triangle义指clipPath区域形状
 	 */
-	private void gradFillForTriangle(Path path, Canvas canvas, 
-			Paint fillPaint, int[] colors, float[] positions,
-			PointF gradCenter, PointF lineStart, PointF lineEnd) {
+	private void gradFillForTriangle(PointF gradCenter, PointF lineStart, PointF lineEnd) {
 		PointF footPointF = getFootPoint(gradCenter, lineStart, lineEnd);
-		if (gradCenter.x == footPointF.x &&
+		if (footPointF == null && gradCenter.x == footPointF.x &&
 				gradCenter.y == footPointF.y) {
 			// 点在直线上
 			return;
@@ -189,10 +182,21 @@ public abstract class PathGradFillBase {
 		trianglePath.lineTo(lineEnd.x, lineEnd.y);
 		trianglePath.close();
 		
+		lineGradFill(trianglePath, gradCenter, footPointF, 0, 0);
+	}
+	
+	protected void lineGradFill(Path clippath, PointF start, PointF end,
+			float dx, float dy) {
 		canvas.save();
-		canvas.clipPath(trianglePath);
-		LinearGradient lg = new LinearGradient(gradCenter.x, gradCenter.y, 
-				footPointF.x, footPointF.y, colors, positions, TileMode.MIRROR);
+		if (clippath != null)
+			canvas.clipPath(clippath);
+		LinearGradient lg = new LinearGradient(start.x, start.y, 
+				end.x, end.y, colors, positions, TileMode.MIRROR);
+		if (dx != 0 || dy != 0) {
+			Matrix matrix = new Matrix();
+			matrix.preTranslate(dx, dy);
+			lg.setLocalMatrix(matrix);
+		}
 		fillPaint.setShader(lg);
 		canvas.drawPath(path, fillPaint);
 		canvas.restore();
@@ -213,20 +217,20 @@ public abstract class PathGradFillBase {
 	}
 	
 	/**
-	 * 求一点在经过另两点直线的垂足（D）
-	 * @param C
-	 * @param A 
-	 * @param B
-	 * @return
+	 * 求一点到直线(另两点决定)的垂足（D）
+	 * @param C 直线外一点
+	 * @param A 直线上一点
+	 * @param B 直线上另一点
+	 * @return 垂足坐标
 	 */
-	private PointF getFootPoint(PointF C, PointF A, PointF B) {
-		PointF destPoint = new PointF();
+	static public PointF getFootPoint(PointF C, PointF A, PointF B) {
+		PointF destPoint = null;
 		if (A.x == B.x) { 
 			// 垂直
-			destPoint.set(A.x, C.y);
+			destPoint = new PointF(A.x, C.y);
 		} else if (A.y == B.y) {
 			// 水平
-			destPoint.set(C.x, A.y);
+			destPoint = new PointF(C.x, A.y);
 		} else {
 			/*
 			 原直线AB方程式为：y-yA=k*（x-xA）,斜率公式:k=(yB-yA)/(xB-xA)
@@ -239,11 +243,26 @@ public abstract class PathGradFillBase {
 				y=k*(x-xA)+ yA
 			 */
 			float k = (B.y-A.y) / (B.x-A.x); 
-			float x = (k * A.x+ C.x / k + C.y - A.y) / (1 / k + k);
-			float y = k*(x-A.x)+ A.y;
-			destPoint.set(x, y);
+			destPoint = getFootPoint(k, A, C);
 		}
 		
 		return destPoint;
+	}
+	
+	/**
+	 * 求一点到直线(由A和k决定)的垂足（D）
+	 * @param k 过A的直线的斜率
+	 * @param A 斜率为k的直线上的一点 
+	 * @param C 直线外一点 
+	 * @return 垂足坐标
+	 */
+	static public PointF getFootPoint(float k, PointF A, PointF C) {
+		float k1 = (C.y-A.y) / (C.x-A.x); 
+		if (k1 == k) {
+			return C;
+		}
+		float x = (k * A.x+ C.x / k + C.y - A.y) / (1 / k + k);
+		float y = k*(x-A.x)+ A.y;
+		return new PointF(x, y);
 	}
 }

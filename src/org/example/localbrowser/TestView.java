@@ -3,6 +3,7 @@ package org.example.localbrowser;
 import java.io.File;
 
 import org.example.localbrowser.pathgradfill.CircleGradFill;
+import org.example.localbrowser.pathgradfill.LinGradFill;
 import org.example.localbrowser.pathgradfill.RectGradFill;
 import org.example.localbrowser.pathgradfill.ShapeGradFill;
 
@@ -64,7 +65,32 @@ public class TestView extends View {
 	}
 
 	public void onDraw(Canvas canvas) {
-		testCircleGradFill(canvas);
+		testLinGradFill(canvas);
+	}
+	
+	private void testLinGradFill(Canvas canvas) {
+		Paint p = new Paint();
+
+		int[] colors = new int[3];
+		float[] positions = new float[3];
+
+		colors[0] = Color.BLUE;
+		colors[1] = Color.YELLOW;
+		colors[2] = Color.GREEN;
+		positions[0] = 0f;
+		positions[1] = 0.5f;
+		positions[2] = 1f;
+		
+		RectF dstRect = new RectF(0, 0, this.getHeight(), this.getHeight());
+		Path path = new Path();
+		path.addRect(dstRect, Direction.CW);
+		
+		RectF fillToRect = null;
+		RectF tileRect = new RectF(1f/3, 1f/3, 1f/3, 1f/3);
+		
+		LinGradFill gradFill = new LinGradFill(path, canvas, p, dstRect, fillToRect, tileRect, colors, positions);
+		gradFill.setLinParam(true, 315);
+		gradFill.gradFill();
 	}
 	
 	private void testShapeGradFill(Canvas canvas) {
