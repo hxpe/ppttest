@@ -1,6 +1,3 @@
-/**
- * 
- */
 package org.example.localbrowser.pathgradfill;
 
 import android.graphics.Canvas;

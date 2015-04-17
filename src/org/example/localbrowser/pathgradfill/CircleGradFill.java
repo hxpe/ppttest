@@ -1,6 +1,5 @@
 package org.example.localbrowser.pathgradfill;
 
-import org.example.localbrowser.pathgradfill.PathGradFillBase.ITileFillAction;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -21,7 +20,7 @@ public class CircleGradFill extends PathGradFillBase
 			RectF dstRect, RectF fillToRect, RectF tileRect,
 			int[] colors, float[] positions) {
 		super(path, canvas, fillPaint, dstRect, fillToRect, tileRect, colors, positions);
-		
+
 		if (haveMoreTile()) {
 			// 对于circle填充，tileRect进行修正
 			float radius = (float)Math.sqrt((this.tileRect.width() / 2) *(this.tileRect.width() / 2) +
@@ -31,7 +30,7 @@ public class CircleGradFill extends PathGradFillBase
 			this.tileRect.set(centerX - radius, centerY - radius, centerX + radius, centerY + radius);
 		}
 	}
-	
+
 	@Override
 	public void gradFill() {
 		updateNewColorPositions();
@@ -59,7 +58,7 @@ public class CircleGradFill extends PathGradFillBase
 		fillPaint.setShader(shader);
 		if (haveMoreTile()) {
 			Path clipPath = new Path();
-			clipPath.addCircle(tileRect.centerX(), tileRect.centerY(), 
+			clipPath.addCircle(tileRect.centerX(), tileRect.centerY(),
 					tileRect.width() / 2, Direction.CW);
 			canvas.clipPath(clipPath);
 		}
@@ -76,33 +75,33 @@ public class CircleGradFill extends PathGradFillBase
 	}
 	
 	private float getTileRadius() {
-		float focusRadius = tileRect.width() / 2;
-		if (!haveMoreTile()) {
-			// 取离焦点最远的那个角来计算渐变半径
-			float destX = fillToRect.centerX();
-			float destY = fillToRect.centerY();
-			if (destX < tileRect.width() / 2) {
-				if (destY < tileRect.height() / 2) {
-					destX = tileRect.right;
-					destY = tileRect.bottom;
-				} else {
-					destX = tileRect.right;
-					destY = tileRect.top;
-				}
-			} else{
-				if (destY < tileRect.height() / 2) {
-					destX = 0;
-					destY = tileRect.bottom;
-				} else {
-					destX = 0;
-					destY = 0;
-				}
-			}
-			destX += tileRect.left;
-			destY += tileRect.top;
-			focusRadius = (float)Math.sqrt((fillToRect.centerX() - destX) *(fillToRect.centerX() - destX) +
-					(fillToRect.centerY() - destY) * (fillToRect.centerY() - destY));
-		}
+        float focusRadius = 0;
+        if (!haveMoreTile()) {
+            // 取离焦点最远的那个角来计算渐变半径
+            float destX = fillToRect.centerX();
+            float destY = fillToRect.centerY();
+            if (destX < tileRect.centerX()) {
+                if (destY < tileRect.centerY()) {
+                    destX = tileRect.right;
+                    destY = tileRect.bottom;
+                } else {
+                    destX = tileRect.right;
+                    destY = tileRect.top;
+                }
+            } else {
+                if (destY < tileRect.centerY()) {
+                    destX = tileRect.left;
+                    destY = tileRect.bottom;
+                } else {
+                    destX = tileRect.left;
+                    destY = tileRect.top;
+                }
+            }
+            focusRadius = (float) Math.sqrt((fillToRect.centerX() - destX) * (fillToRect.centerX() - destX) +
+                    (fillToRect.centerY() - destY) * (fillToRect.centerY() - destY));
+        }
+        if (focusRadius == 0)
+            focusRadius = tileRect.width() / 2;
 		return focusRadius;
 	}
 }

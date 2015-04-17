@@ -71,7 +71,7 @@ public abstract class PathGradFillBase {
 	}
 	
 	/**
-	 * 是否需要更多平铺填充，tileRect不等于或内含dstRect，则返回true
+	 * 是否需要更多平铺填充，tileRect不等于或内含于dstRect，则返回true
 	 * @return
 	 */
 	protected boolean haveMoreTile() {
@@ -168,7 +168,7 @@ public abstract class PathGradFillBase {
 	}
 	
 	/**
-	 * 一个点到一条边的渐变，这里定义为点到垂足的渐变，triangle义指clipPath区域形状
+	 * 一个点到一条边的渐变，这里定义为点到垂足的渐变，triangle名称义指clipPath区域形状
 	 */
 	private void gradFillForTriangle(PointF gradCenter, PointF lineStart, PointF lineEnd) {
 		PointF footPointF = getFootPoint(gradCenter, lineStart, lineEnd);
@@ -188,7 +188,7 @@ public abstract class PathGradFillBase {
 	}
 	
 	/**
-	 * 以positions为基准排序两个数组
+	 * 以positions升序来排序两个数组
 	 * @param positions
 	 * @param colors
 	 */
@@ -209,7 +209,15 @@ public abstract class PathGradFillBase {
 			}
 		}
 	}
-	
+
+    /**
+     * 线性渐变
+     * @param clippath
+     * @param start
+     * @param end
+     * @param dx
+     * @param dy
+     */
 	protected void lineGradFill(Path clippath, PointF start, PointF end,
 			float dx, float dy) {
 		canvas.save();
@@ -257,17 +265,7 @@ public abstract class PathGradFillBase {
 			// 水平
 			destPoint = new PointF(C.x, A.y);
 		} else {
-			/*
-			 原直线AB方程式为：y-yA=k*（x-xA）,斜率公式:k=(yB-yA)/(xB-xA)
-			   直线 外点C，设垂足D
-			 	∵两条垂直直线的斜率乘积 = -1
-				∴由AB线斜率为k可知CD线斜率为-1/k，可知直线CD方程式为y-yC=-1/k*（x-xC）
-			这里已经排除斜率不存在的情况，联立二元方程组，接得：
-				x = (k * xA+ xC / k + yC - yA) / (1 / k + k)
-			再代入 BC方程得：
-				y=k*(x-xA)+ yA
-			 */
-			float k = (B.y-A.y) / (B.x-A.x); 
+			float k = (B.y-A.y) / (B.x-A.x);
 			destPoint = getFootPoint(k, A, C);
 		}
 		
@@ -276,7 +274,7 @@ public abstract class PathGradFillBase {
 	
 	/**
 	 * 求一点到直线(由A和k决定)的垂足（D）
-	 * @param k 过A的直线的斜率
+	 * @param k 过A的直线的斜率，必须存在
 	 * @param A 斜率为k的直线上的一点 
 	 * @param C 直线外一点 
 	 * @return 垂足坐标
@@ -286,6 +284,16 @@ public abstract class PathGradFillBase {
 		if (k1 == k) {
 			return C;
 		}
+        /*
+         设直线AB方程式为：y-yA=k*（x-xA）,斜率公式:k=(yB-yA)/(xB-xA)
+           直线外点C，设垂足D
+            ∵两条垂直直线的斜率乘积 = -1
+            ∴由AB线斜率为k可知CD直线线斜率为-1/k，可知直线CD方程式为y-yC=-1/k*（x-xC）
+        联立二元方程组，解得：
+            x = (k * xA+ xC / k + yC - yA) / (1 / k + k)
+        再代入BC方程得：
+            y=k*(x-xA)+ yA
+         */
 		float x = (k * A.x+ C.x / k + C.y - A.y) / (1 / k + k);
 		float y = k*(x-A.x)+ A.y;
 		return new PointF(x, y);
