@@ -17,6 +17,7 @@ import android.graphics.LinearGradient;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PathMeasure;
 import android.graphics.PointF;
 import android.graphics.Path.Direction;
 import android.graphics.RadialGradient;
@@ -26,6 +27,7 @@ import android.graphics.PorterDuff.Mode;
 import android.graphics.Shader.TileMode;
 import android.graphics.SweepGradient;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 public class TestView extends View {
@@ -65,7 +67,11 @@ public class TestView extends View {
 	}
 
 	public void onDraw(Canvas canvas) {
-		testLinGradFill(canvas);
+		long startCount = System.currentTimeMillis();
+		testDrawLineLinearGradient(canvas);
+		long endCount = System.currentTimeMillis();
+		long des = endCount - startCount;
+		Log.d("onDraw", "abcdefg" + des);
 	}
 	
 	private void testLinGradFill(Canvas canvas) {
@@ -77,11 +83,11 @@ public class TestView extends View {
 		colors[0] = Color.BLUE;
 		colors[1] = Color.YELLOW;
 		colors[2] = Color.GREEN;
-		positions[0] = 0.7f;
+		positions[0] = 0f;
 		positions[1] = 0.5f;
 		positions[2] = 1f;
 		
-		RectF dstRect = new RectF(0, 0, this.getHeight(), this.getHeight());
+		RectF dstRect = new RectF(0, 0, this.getWidth(), this.getHeight());
 		Path path = new Path();
 		path.addRect(dstRect, Direction.CW);
 		
@@ -89,7 +95,7 @@ public class TestView extends View {
 		RectF tileRect = null;new RectF(1f/3, 1f/3, 1f/3, 1f/3);
 		
 		LinGradFill gradFill = new LinGradFill(path, canvas, p, dstRect, fillToRect, tileRect, colors, positions);
-		gradFill.setLinParam(true, 90);
+		gradFill.setLinParam(true, 45);
 		gradFill.gradFill();
 	}
 	
@@ -171,7 +177,7 @@ public class TestView extends View {
 		path.addRect(dstRect, Direction.CW);
 		
 		RectF fillToRect = new RectF(0.5f, 0.5f, 0.5f, 0.5f);
-		RectF tileRect = new RectF(0.25f, 0.25f, 0.25f, 0.25f);
+		RectF tileRect = new RectF(0, 0, 0, 0);
 		
 		RectGradFill gradFill = new RectGradFill(path, canvas, p, dstRect, fillToRect, tileRect, colors, positions);
 		gradFill.gradFill();
@@ -213,18 +219,20 @@ public class TestView extends View {
 		positions[0] = 0f;
 		positions[1] = 0.5f;
 		positions[2] = 1f;
-		float midY = this.getHeight() / 2;
-		float len = this.getWidth();
-		LinearGradient shader = new LinearGradient(0, midY, len, midY, colors,
-				positions, TileMode.MIRROR);
-		Matrix matrix = new Matrix();
-		matrix.setRotate(0, len / 2, midY);
-		shader.setLocalMatrix(matrix);
-
-		p.setShader(shader);
-		canvas.scale(0.5f, 1f);
-		canvas.rotate(15);
-		canvas.drawLine(0, midY, len, midY, p);
+		
+		Path path = new Path();
+		RectF dstRect = new RectF(0, 0, this.getHeight(), this.getHeight());
+		PointF[] points = getStar5Poins(dstRect);
+		path.moveTo(points[0].x, points[0].y);
+		for (int i = 1; i < points.length; i++)
+			path.lineTo(points[i].x, points[i].y);
+		path.close();
+		
+		RectF fillToRect = new RectF(0.5f, 0.5f, 0.5f, 0.5f);
+		RectF tileRect = new RectF(0, 0, 0, 0);
+		
+		ShapeGradFill gradFill = new ShapeGradFill(path, canvas, p, dstRect, fillToRect, tileRect, colors, positions);
+		gradFill.gradFill();
 	}
 	
 	private void testLinearGradient(Canvas canvas) {
