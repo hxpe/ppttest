@@ -39,9 +39,7 @@ public abstract class PathGradFillBase {
 		this.dstRect = dstRect;
 		this.colors = colors;
 		this.positions = positions;
-		// 从IO读上来的位置可能是乱序的，调整下
-		sortPositionForColors(this.positions, this.colors);
-		
+
 		if (fillToRect == null)
 			fillToRect = new RectF(0, 0, 1.0f, 1.0f); // 默认左上角
 		if (tileRect == null)
@@ -170,7 +168,7 @@ public abstract class PathGradFillBase {
 	/**
 	 * 一个点到一条边的渐变，这里定义为点到垂足的渐变，triangle名称义指clipPath区域形状
 	 */
-	private void gradFillForTriangle(PointF gradCenter, PointF lineStart, PointF lineEnd) {
+	protected void gradFillForTriangle(PointF gradCenter, PointF lineStart, PointF lineEnd) {
 		PointF footPointF = getFootPoint(gradCenter, lineStart, lineEnd);
 		if (footPointF == null && gradCenter.x == footPointF.x &&
 				gradCenter.y == footPointF.y) {
@@ -185,29 +183,6 @@ public abstract class PathGradFillBase {
 		trianglePath.close();
 		
 		lineGradFill(trianglePath, gradCenter, footPointF, 0, 0);
-	}
-	
-	/**
-	 * 以positions升序来排序两个数组
-	 * @param positions
-	 * @param colors
-	 */
-	private void sortPositionForColors(float[] positions, int[] colors) {
-		if (positions.length == 0 || colors.length != positions.length)
-			return;
-		for (int i = 0; i < positions.length; i++) {
-			for (int j = i + 1; j < positions.length; j++) {
-				if (positions[i] > positions[j]) {
-					float tempPos = positions[i];
-					positions[i] = positions[j];
-					positions[j] = tempPos;
-					
-					int tempColor = colors[i];
-					colors[i] = colors[j];
-					colors[j] = tempColor;
-				}
-			}
-		}
 	}
 
     /**

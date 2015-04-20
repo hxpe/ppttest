@@ -55,6 +55,6 @@ public class ShapeGradFill extends RectGradFill {
 	}
 	
 	private boolean supportFillForPath() {
-		return true;
+		return false;
 	}
 }
