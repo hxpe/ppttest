@@ -25,8 +25,8 @@ public class ShapeGradFill extends RectGradFill {
 			fillForPath();
 		} else if (getPoints() != null) {
 			// 如果纯粹是n条直线拼成的闭合path，可以分解成n个点到直线的渐变
-			updateNewColorPositions();
-			gradFillForLinesPath(getCenter(), true);
+			gradFillForLinesPath(createPointArray(fillToRect.centerX(), 
+					fillToRect.centerY()), true);
 		} else {
 			// 其它暂时处理成Rect填充了
 			super.gradFill();

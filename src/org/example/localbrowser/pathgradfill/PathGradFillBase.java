@@ -22,9 +22,11 @@ public abstract class PathGradFillBase {
 	protected int[] colors;
 	protected float[] positions;
 	
-	private PointF[] points;
+	private float[] points;
 	private Matrix matrix;
-	private PointF tempCenterF;
+	
+	// 缓存加速
+	float[] fileToRectPoints;
 	
 	static public interface ITileFillAction {
 		void tileAction();
@@ -48,25 +50,15 @@ public abstract class PathGradFillBase {
 		this.tileRect = transPercentageRect(tileRect, dstRect);
 	}
 	
-	public void setPoints(PointF[] points) {
+	public void setPoints(float[] points) {
 		this.points = points;
 	}
 	
-	public PointF[] getPoints() {
+	public float[] getPoints() {
 		return this.points;
 	}
 	
 	public abstract void gradFill();
-	protected abstract float getFocusPercent();
-	
-	/**
-	 * Circle渐变的中心点
-	 */
-	protected PointF getCenter() {
-		if (tempCenterF == null)
-			tempCenterF = new PointF(fillToRect.centerX(), fillToRect.centerY());
-		return tempCenterF;
-	}
 	
 	/**
 	 * 是否需要更多平铺填充，tileRect不等于或内含于dstRect，则返回true
@@ -80,40 +72,47 @@ public abstract class PathGradFillBase {
 	}
 	
 	/**
-	 * 根据焦点框所占比例获取调整后的渐变位置列表
-	 * 只有焦点框不是一个点才需要
+	 * 平铺区域顶点数组
 	 * @return
 	 */
-	protected void updateNewColorPositions() {
-		if (positions == null)
-			return;
-		float focusPercent = getFocusPercent();
-		if (focusPercent == 0)
-			return;
-		float remain = 1 - focusPercent;
-		float[] newPosition = new float[positions.length];
-		for (int i = 0; i < positions.length; i++) {
-			newPosition[i] = focusPercent + positions[i] * remain;
-		}
-		
-		positions = newPosition;
-	}
+	protected float[] getFillToRectPoints() {
+	    	if (fileToRectPoints == null) {
+	    		fileToRectPoints = createPointArray(
+	    	        	fillToRect.left, fillToRect.top,
+	    	        	fillToRect.right,fillToRect.top,
+	    	        	fillToRect.right, fillToRect.bottom,
+	    	        	fillToRect.left, fillToRect.bottom);
+	    	}
+	    	
+	    	return fileToRectPoints;
+	    }
 	
 	/**
 	 * 一个点到n条直线组成的闭合形状的渐变
 	 */
-	protected void gradFillForLinesPath(PointF gradCenter, boolean closePath) {
-		if (points == null || points.length < 2)
+	protected void gradFillForLinesPath(float[] gradCenter, boolean closePath) {
+		if (points == null || points.length < 2 || points.length % 2 == 1)
 			return;
-		PointF starF = points[0];
-		for (int i = 1; i < points.length; i++) {
-			PointF endF = points[i];
-			gradFillForTriangle(gradCenter, starF, endF);
-			starF = endF;
+		if (gradCenter != null && gradCenter.length < 2) {
+			throw new ArrayIndexOutOfBoundsException();
+		}
+		
+		float[] start = new float[2];
+		float[] end = new float[2];
+		start[0] = points[0];
+		start[1] = points[1];
+		for (int i = 2; i < points.length; i = i + 2) {
+			end[0] = points[i];
+			end[1] = points[i + 1];
+			gradFillForTriangle(gradCenter, start, end);
+			start[0] = end[0];
+			start[1] = end[1];
 		}
 		
 		if (closePath) {
-			gradFillForTriangle(gradCenter, starF, points[0]);
+			end[0] = points[0];
+			end[1] = points[1];
+			gradFillForTriangle(gradCenter, start, end);
 		}
 	}
 	
@@ -168,18 +167,23 @@ public abstract class PathGradFillBase {
 	/**
 	 * 一个点到一条边的渐变，这里定义为点到垂足的渐变，triangle名称义指clipPath区域形状
 	 */
-	protected void gradFillForTriangle(PointF gradCenter, PointF lineStart, PointF lineEnd) {
-		PointF footPointF = getFootPoint(gradCenter, lineStart, lineEnd);
-		if (footPointF == null && gradCenter.x == footPointF.x &&
-				gradCenter.y == footPointF.y) {
+	protected void gradFillForTriangle(float[] gradCenter, float[] lineStart, float[] lineEnd) {
+		if (gradCenter != null && gradCenter.length < 2 || lineStart != null && lineStart.length < 2 ||
+				lineEnd != null && lineEnd.length < 2) {
+			throw new ArrayIndexOutOfBoundsException();
+		}
+		
+		float[] footPointF = getFootPoint(gradCenter, lineStart, lineEnd);
+		if (footPointF == null || (gradCenter[0] == footPointF[0] &&
+				gradCenter[1] == footPointF[1])) {
 			// 点在直线上
 			return;
 		}
 		// 剪切三角形区域
 		Path trianglePath = new Path();
-		trianglePath.moveTo(gradCenter.x, gradCenter.y);
-		trianglePath.lineTo(lineStart.x, lineStart.y);
-		trianglePath.lineTo(lineEnd.x, lineEnd.y);
+		trianglePath.moveTo(gradCenter[0], gradCenter[1]);
+		trianglePath.lineTo(lineStart[0], lineStart[1]);
+		trianglePath.lineTo(lineEnd[0], lineEnd[1]);
 		trianglePath.close();
 		
 		lineGradFill(trianglePath, gradCenter, footPointF, 0, 0);
@@ -193,13 +197,17 @@ public abstract class PathGradFillBase {
      * @param dx
      * @param dy
      */
-	protected void lineGradFill(Path clippath, PointF start, PointF end,
+	protected void lineGradFill(Path clippath, float[] start, float[] end,
 			float dx, float dy) {
+		if (start != null && start.length < 2 || end != null && end.length < 2) {
+			throw new ArrayIndexOutOfBoundsException();
+		}
+		
 		canvas.save();
 		if (clippath != null)
 			canvas.clipPath(clippath);
-		LinearGradient lg = new LinearGradient(start.x, start.y, 
-				end.x, end.y, colors, positions, TileMode.MIRROR);
+		LinearGradient lg = new LinearGradient(start[0], start[1], 
+				end[0], end[1], colors, positions, TileMode.MIRROR);
 		if (dx != 0 || dy != 0) {
 			Matrix matrix = new Matrix();
 			matrix.preTranslate(dx, dy);
@@ -231,16 +239,25 @@ public abstract class PathGradFillBase {
 	 * @param B 直线上另一点
 	 * @return 垂足坐标
 	 */
-	static public PointF getFootPoint(PointF C, PointF A, PointF B) {
-		PointF destPoint = null;
-		if (A.x == B.x) { 
+	static public float[] getFootPoint(float[] C, float[] A, float[] B) {
+		if (A != null && A.length < 2 || C != null && B.length < 2 ||
+				C != null && C.length < 2) {
+			throw new ArrayIndexOutOfBoundsException();
+		}
+		
+		float[] destPoint = null;
+		if (A[0] == B[0]) { 
 			// 垂直
-			destPoint = new PointF(A.x, C.y);
-		} else if (A.y == B.y) {
+			destPoint = new float[2];
+			destPoint[0] = A[0];
+			destPoint[1] = C[1];
+		} else if (A[1] == B[1]) {
 			// 水平
-			destPoint = new PointF(C.x, A.y);
+			destPoint = new float[2];
+			destPoint[0] = C[0];
+			destPoint[1] = A[1];
 		} else {
-			float k = (B.y-A.y) / (B.x-A.x);
+			float k = (B[1]-A[1]) / (B[0]-A[0]);
 			destPoint = getFootPoint(k, A, C);
 		}
 		
@@ -254,8 +271,12 @@ public abstract class PathGradFillBase {
 	 * @param C 直线外一点 
 	 * @return 垂足坐标
 	 */
-	static public PointF getFootPoint(float k, PointF A, PointF C) {
-		float k1 = (C.y-A.y) / (C.x-A.x); 
+	static public float[] getFootPoint(float k, float[] A, float[] C) {
+		if (A != null && A.length < 2 || C != null && C.length < 2) {
+			throw new ArrayIndexOutOfBoundsException();
+		}
+		 
+		float k1 = (C[1]-A[1]) / (C[0]-A[0]); 
 		if (k1 == k) {
 			return C;
 		}
@@ -269,8 +290,20 @@ public abstract class PathGradFillBase {
         再代入BC方程得：
             y=k*(x-xA)+ yA
          */
-		float x = (k * A.x+ C.x / k + C.y - A.y) / (1 / k + k);
-		float y = k*(x-A.x)+ A.y;
-		return new PointF(x, y);
+		float x = (k * A[0]+ C[0] / k + C[1] - A[1]) / (1 / k + k);
+		float y = k*(x-A[0])+ A[1];
+		float[] foot = new float[2];
+		foot[0] = x;
+		foot[1] = y;
+		return foot;
+	}
+	
+	static public float[] createPointArray(float... array) {
+		float[] points = new float[array.length];
+		for (int i = 0; i < array.length; i++) {
+			points[i] = array[i];
+		}
+		
+		return points;
 	}
 }
