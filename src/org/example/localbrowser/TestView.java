@@ -68,11 +68,44 @@ public class TestView extends View {
 
 	public void onDraw(Canvas canvas) {
 		long startCount = System.currentTimeMillis();
-		testDrawLineLinearGradient(canvas);
+		testRectGradFill(canvas);
 		long endCount = System.currentTimeMillis();
 		long des = endCount - startCount;
 		Log.d("onDraw", "abcdefg" + des);
 	}
+	
+	private void testRectRotation(Canvas canvas) {
+		final float rot = 130;
+		RectF testRctF = new RectF(100, 100, 400, 300);
+		Paint p = new Paint();
+		p.setColor(Color.BLUE);
+		canvas.drawRect(testRctF, p);
+		p.setColor(Color.GREEN);
+		p.setAlpha(50);
+		canvas.save();
+		canvas.rotate(rot, testRctF.centerX(), testRctF.centerY());
+		canvas.drawRect(testRctF, p);
+		canvas.restore();
+		p.setColor(Color.RED);
+		p.setAlpha(50);
+		canvas.drawRect(getRotationRect(testRctF, rot), p);
+	}
+	
+	private RectF getRotationRect(RectF sourceRect, float rotation)
+	 {
+		 float centerX = sourceRect.centerX();
+		 float centerY = sourceRect.centerY();
+		 
+		 float cosValue = Math.abs((float)Math.cos(rotation * Math.PI / 180));
+		 float sinValue = Math.abs((float)Math.sin(rotation * Math.PI / 180));
+		 float height = sourceRect.height() * cosValue + sourceRect.width() * sinValue;
+		 float width = sourceRect.width() * cosValue  + sourceRect.height() * sinValue;
+		 
+		 return new RectF(centerX - width / 2,
+		                  centerY - height / 2,
+		                  centerX + width / 2,
+		                  centerY + height /2);
+	 }
 	
 	private void testLinGradFill(Canvas canvas) {
 		Paint p = new Paint();
@@ -176,7 +209,7 @@ public class TestView extends View {
 		Path path = new Path();
 		path.addRect(dstRect, Direction.CW);
 		
-		RectF fillToRect = new RectF(0.5f, 0.5f, 0.5f, 0.5f);
+		RectF fillToRect = new RectF(0.3f, 0.2f, 0.3f, -0.6f);
 		RectF tileRect = new RectF(0, 0, 0, 0);
 		
 		RectGradFill gradFill = new RectGradFill(path, canvas, p, dstRect, fillToRect, tileRect, colors, positions);
