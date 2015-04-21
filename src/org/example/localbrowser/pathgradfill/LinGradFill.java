@@ -12,7 +12,7 @@ import android.graphics.RectF;
  */
 public class LinGradFill extends PathGradFillBase {
 	private boolean scaled = false;
-	private float angle = 90;
+	private float oriAngle = 90;
 	
 	public LinGradFill(Path path, Canvas canvas, Paint fillPaint, 
 			RectF dstRect, RectF fillToRect, RectF tileRect,
@@ -22,12 +22,12 @@ public class LinGradFill extends PathGradFillBase {
 	
 	public void setLinParam(boolean scaled, float angle) {
 		this.scaled = scaled;
-		this.angle = scaleAngle(scaled, angle);
+		this.oriAngle = angle;
 	}
 	
 	@Override
 	public void gradFill() {
-		
+		float angle = scaleAngle(this.scaled, this.oriAngle);
 		// 始终以左上角为渐变起点，并根据角度寻找渐变终点
 		PointF start = new PointF(tileRect.left, tileRect.top);
 		PointF end = null;
@@ -73,6 +73,9 @@ public class LinGradFill extends PathGradFillBase {
 	}
 	
 	private float scaleAngle(boolean scaled, float angle) {
+		if (!scaled && !this.rotWithShape) {
+			angle -= this.rotation;
+		}
 		angle = (angle + 360) % 360;
 		if (scaled) {
 			if (angle < 45) {

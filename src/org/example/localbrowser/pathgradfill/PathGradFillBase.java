@@ -23,8 +23,13 @@ public abstract class PathGradFillBase {
 	protected float[] positions;
 	
 	private PointF[] points;
-	private Matrix matrix;
+	protected Matrix matrix;
 	private PointF tempCenterF;
+	
+	// 对象已经本身已经附加了一个旋转矩阵,即默认已经跟随旋转
+	// 这里只处理rotWithShape等于false的情况，反向旋转回去
+	protected float rotation = 0f;
+	protected boolean rotWithShape = true; 
 	
 	static public interface ITileFillAction {
 		void tileAction();
@@ -54,6 +59,11 @@ public abstract class PathGradFillBase {
 	
 	public PointF[] getPoints() {
 		return this.points;
+	}
+	
+	public void setRotParam(boolean rotWithShape, float rotation) {
+		this.rotWithShape = rotWithShape;
+		this.rotation = rotation;
 	}
 	
 	public abstract void gradFill();
