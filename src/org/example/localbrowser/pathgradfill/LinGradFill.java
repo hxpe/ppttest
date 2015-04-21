@@ -29,8 +29,8 @@ public class LinGradFill extends PathGradFillBase {
 	public void gradFill() {
 		
 		// 始终以左上角为渐变起点，并根据角度寻找渐变终点
-		float[] start = createPointArray(tileRect.left, tileRect.top);
-		float[] end = null;
+		PointF start = new PointF(tileRect.left, tileRect.top);
+		PointF end = null;
 		
 		int sx = 0; // 辅助点相对于tileWith的倍数
 		int sy = 0; // 辅助点相对于tileHeight的倍数
@@ -56,7 +56,7 @@ public class LinGradFill extends PathGradFillBase {
 			sy = -1;
 		}
 		
-		end = createPointArray(tileRect.left + tileRect.width() * sx, tileRect.top + tileRect.height() * sy);
+		end = new PointF(tileRect.left + tileRect.width() * sx, tileRect.top + tileRect.height() * sy);
 		if (sx != 0 && sy != 0) {
 			// 纠正为stat到过end的直线的垂足
 			end = getFootPoint((float)Math.tan(Math.toRadians(angle)), start, end);

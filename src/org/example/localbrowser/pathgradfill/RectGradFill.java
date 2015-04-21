@@ -11,25 +11,15 @@ import android.graphics.RectF;
  * rect类型的渐变填充实现
  */
 public class RectGradFill extends PathGradFillBase {
-	
 	public RectGradFill(Path path, Canvas canvas, Paint fillPaint, 
 			RectF dstRect, RectF fillToRect, RectF tileRect,
 			int[] colors, float[] positions) {
 		super(path, canvas, fillPaint, dstRect, fillToRect, tileRect, colors, positions);
-		
-        this.setPoints(createPointArray(
-	        	this.tileRect.left,
-	        	this.tileRect.top,
-	        	this.tileRect.right,
-	        	this.tileRect.top,
-	        	this.tileRect.right,
-	        	this.tileRect.bottom,
-	        	this.tileRect.left,
-	        	this.tileRect.bottom));
 	}
 	
 	@Override
 	public void gradFill() {
+
 		this.canvas.save();
 		this.canvas.clipPath(this.path);
         fillForRect();
@@ -46,6 +36,18 @@ public class RectGradFill extends PathGradFillBase {
 	}
 
     private void fillForRect() {
+        PointF[] tilePoints = new PointF[4];
+        tilePoints[0] = new PointF(tileRect.left, tileRect.top);
+        tilePoints[1] = new PointF(tileRect.right,tileRect.top);
+        tilePoints[2] = new PointF(tileRect.right, tileRect.bottom);
+        tilePoints[3] = new PointF(tileRect.left, tileRect.bottom);
+
+        PointF[] filePoints = new PointF[4];
+        filePoints[0] = new PointF(fillToRect.left, fillToRect.top);
+        filePoints[1] = new PointF(fillToRect.right,fillToRect.top);
+        filePoints[2] = new PointF(fillToRect.right, fillToRect.bottom);
+        filePoints[3] = new PointF(fillToRect.left, fillToRect.bottom);
+
         if (fillToRect.width() > 0 && fillToRect.height() > 0) {
             // 纯色填充焦点框
             canvas.save();
@@ -55,57 +57,46 @@ public class RectGradFill extends PathGradFillBase {
         }
 
         // 上
-        gradFillFromFocusLineToTileLine(0, 1, 1, 0);
+        gradFillForParallelTwoLine(filePoints[0], filePoints[1], tilePoints[1], tilePoints[0]);
         // 右
-        gradFillFromFocusLineToTileLine(1, 2, 2, 1);
+        gradFillForParallelTwoLine(filePoints[1], filePoints[2], tilePoints[2], tilePoints[1]);
         // 下
-        gradFillFromFocusLineToTileLine(2, 3, 3, 2);
+        gradFillForParallelTwoLine(filePoints[2], filePoints[3], tilePoints[3], tilePoints[2]);
         // 左
-        gradFillFromFocusLineToTileLine(0, 3, 3, 0);
+        gradFillForParallelTwoLine(filePoints[0], filePoints[3], tilePoints[3], tilePoints[0]);
     }
-    
-    private void gradFillFromFocusLineToTileLine(int focusLineStartIndex, int focusLineEndIndex,
-    		int tileLineStartIndex, int tileLineEndIndex) {
-    	float[] fillToPoints = getFillToRectPoints();
-    	float[] tilePoints = this.getPoints();
-    		
-    	focusLineStartIndex *= 2;
-    	focusLineEndIndex *= 2;
-    	tileLineStartIndex *= 2;
-    	tileLineEndIndex *= 2;
-    	float[] line1Start = createPointArray(fillToPoints[focusLineStartIndex],
-    			fillToPoints[focusLineStartIndex + 1]);
-    	float[] line1End = createPointArray(fillToPoints[focusLineEndIndex],
-    			fillToPoints[focusLineEndIndex + 1]);
-    	float[] line2Start= createPointArray(tilePoints[tileLineStartIndex],
-    			tilePoints[tileLineStartIndex + 1]);
-    	float[] line2End = createPointArray(tilePoints[tileLineEndIndex],
-    			tilePoints[tileLineEndIndex + 1]);
-    	
-    	if (!tileRect.contains(line1Start[0], line1Start[1]))
-    		return;
-    	
-        if (line1Start[0] == line1End[0] && line1Start[1] == line1End[1]) {
+
+    /**
+     * 矩形渐变(方法是剪切区域，从一边到另一条平行边的渐变)
+     * @param line1Start
+     * @param line1End
+     * @param line2Start
+     * @param line2End
+     */
+    private void gradFillForParallelTwoLine(PointF line1Start, PointF line1End, PointF line2Start, PointF line2End) {
+        if (line1Start.x == line1End.x && line1Start.y == line1End.y ) {
             // 是三角形，转化成三角形渐变
             gradFillForTriangle(line1Start, line2Start, line2End);
         } else {
-            float[] footPointF = getFootPoint(line1Start, line2Start, line2End);
-            if (footPointF == null || (line1Start[0] == footPointF[0] &&
-                    line1Start[1] == footPointF[1])) {
+            if (!tileRect.contains(line1Start.x, line1Start.y) &&
+                    !tileRect.contains(line1End.x, line1End.y))
+                return;
+            PointF footPointF = getFootPoint(line1Start, line2Start, line2End);
+            if (footPointF == null || isSamePoint(line1Start.x, line1Start.y, footPointF.x, footPointF.y)) {
                 // 点在直线上
                 return;
             }
 
             // 剪切矩形区域
             Path trianglePath = new Path();
-            trianglePath.moveTo(line1Start[0], line1Start[1]);
-            trianglePath.lineTo(line1End[0], line1End[1]);
-            trianglePath.lineTo(line2Start[0], line2Start[1]);
-            trianglePath.lineTo(line2End[0], line2End[1]);
+            trianglePath.moveTo(line1Start.x, line1Start.y);
+            trianglePath.lineTo(line1End.x, line1End.y);
+            trianglePath.lineTo(line2Start.x, line2Start.y);
+            trianglePath.lineTo(line2End.x, line2End.y);
             trianglePath.close();
+
 
             lineGradFill(trianglePath, line1Start, footPointF, 0, 0);
         }
-
     }
 }

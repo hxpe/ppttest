@@ -69,7 +69,6 @@ public class TestView extends View {
 
 	public void onDraw(Canvas canvas) {
 		long startCount = System.currentTimeMillis();
-		testRectGradFill(canvas);
 		testCircleGradFill(canvas);
 		long endCount = System.currentTimeMillis();
 		long des = endCount - startCount;
@@ -156,12 +155,7 @@ public class TestView extends View {
 		
 		ShapeGradFill gradFill = new ShapeGradFill(path, canvas, p, dstRect, fillToRect, tileRect, colors, positions);
 		
-		PointF[] startPoints = getStar5Poins(dstRect);
-		float[] points = new float[startPoints.length * 2];
-		for (int i = 0; i < startPoints.length; i ++) {
-			points[i * 2] = startPoints[i].x;
-			points[i * 2 + 1] = startPoints[i].y;
-		}
+		PointF[] points = getStar5Poins(dstRect);
 		gradFill.setPoints(points);
 		gradFill.gradFill();
 	}
@@ -192,14 +186,6 @@ public class TestView extends View {
 		return vertexes;
 	}
 	
-	private float[] getTrianglePoins(RectF dstRect) {
-		float[] points = PathGradFillBase.createPointArray(
-			dstRect.width()/2, 0,
-			dstRect.width(), dstRect.height(),
-			0, dstRect.height());
-		return points;
-	}
-	
 	private void testRectGradFill(Canvas canvas) {
 		Paint p = new Paint();
 
@@ -217,9 +203,8 @@ public class TestView extends View {
 		Path path = new Path();
 		path.addRect(dstRect, Direction.CW);
 		
-		RectF fillToRect = new RectF(0.3f, 0.2f, 0.3f, -0.6f);
-		RectF fillToRect = new RectF(0.3f, 0.3f, 0.2f, 0.6f);
-		RectF tileRect = new RectF(0, 0, 0, 0);
+		RectF fillToRect = new RectF(0.4f, 0.5f, 0.4f, 0.5f);
+		RectF tileRect = new RectF(1f/3, 1f/3, 1f/3, 1f/3);
 		
 		RectGradFill gradFill = new RectGradFill(path, canvas, p, dstRect, fillToRect, tileRect, colors, positions);
 		gradFill.gradFill();
@@ -238,12 +223,12 @@ public class TestView extends View {
 		positions[1] = 0.5f;
 		positions[2] = 1f;
 		
-		RectF dstRect = new RectF(0, 0, canvas.getHeight(), canvas.getHeight() / 3);
+		RectF dstRect = new RectF(0, 0, this.getHeight(), this.getHeight());
 		Path path = new Path();
 		path.addRect(dstRect, Direction.CW);
 		
 		RectF fillToRect = new RectF(1f, 1f, 0f, 0f);
-		RectF tileRect = new RectF(0, 0, 0, 0);
+		RectF tileRect = new RectF(0, 0, -1, -1);
 		
 		CircleGradFill gradFill = new CircleGradFill(path, canvas, p, dstRect, fillToRect, tileRect, colors, positions);
 		gradFill.gradFill();

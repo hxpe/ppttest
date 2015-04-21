@@ -16,8 +16,6 @@ import android.graphics.Shader.TileMode;
  */
 public class CircleGradFill extends PathGradFillBase
 {
-	private PointF tempCenterF;
-
 	public CircleGradFill(Path path, Canvas canvas, Paint fillPaint, 
 			RectF dstRect, RectF fillToRect, RectF tileRect,
 			int[] colors, float[] positions) {
@@ -67,32 +65,26 @@ public class CircleGradFill extends PathGradFillBase
 		canvas.drawPath(path, fillPaint);
 		canvas.restore();
 	}
-	
-	private PointF getCenter() {
-		if (tempCenterF == null)
-			tempCenterF = new PointF(fillToRect.centerX(), fillToRect.centerY());
-		return tempCenterF;
-	}
-	
-	/**
-	 * 根据焦点框所占比例获取调整后的渐变位置列表
-	 * 只有焦点框不是一个点才需要
-	 * @return
-	 */
-	private void updateNewColorPositions() {
-		if (positions == null)
-			return;
-		float focusPercent = getFocusPercent();
-		if (focusPercent == 0)
-			return;
-		float remain = 1 - focusPercent;
-		float[] newPosition = new float[positions.length];
-		for (int i = 0; i < positions.length; i++) {
-			newPosition[i] = focusPercent + positions[i] * remain;
-		}
-		
-		positions = newPosition;
-	}
+
+    /**
+     * 根据焦点框所占比例获取调整后的渐变位置列表
+     * 只有焦点框不是一个点才需要
+     * @return
+     */
+    private void updateNewColorPositions() {
+        if (positions == null)
+            return;
+        float focusPercent = getFocusPercent();
+        if (focusPercent == 0)
+            return;
+        float remain = 1 - focusPercent;
+        float[] newPosition = new float[positions.length];
+        for (int i = 0; i < positions.length; i++) {
+            newPosition[i] = focusPercent + positions[i] * remain;
+        }
+
+        positions = newPosition;
+    }
 	
 	private float getFocusPercent() {
 		if (fillToRect.width() == 0 && fillToRect.height() == 0)
