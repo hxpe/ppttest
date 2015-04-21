@@ -75,6 +75,39 @@ public class TestView extends View {
 		Log.d("onDraw", "abcdefg" + des);
 	}
 	
+	private void testRectRotation(Canvas canvas) {
+		final float rot = 130;
+		RectF testRctF = new RectF(100, 100, 400, 300);
+		Paint p = new Paint();
+		p.setColor(Color.BLUE);
+		canvas.drawRect(testRctF, p);
+		p.setColor(Color.GREEN);
+		p.setAlpha(50);
+		canvas.save();
+		canvas.rotate(rot, testRctF.centerX(), testRctF.centerY());
+		canvas.drawRect(testRctF, p);
+		canvas.restore();
+		p.setColor(Color.RED);
+		p.setAlpha(50);
+		canvas.drawRect(getRotationRect(testRctF, rot), p);
+	}
+	
+	private RectF getRotationRect(RectF sourceRect, float rotation)
+	 {
+		 float centerX = sourceRect.centerX();
+		 float centerY = sourceRect.centerY();
+		 
+		 float cosValue = Math.abs((float)Math.cos(rotation * Math.PI / 180));
+		 float sinValue = Math.abs((float)Math.sin(rotation * Math.PI / 180));
+		 float height = sourceRect.height() * cosValue + sourceRect.width() * sinValue;
+		 float width = sourceRect.width() * cosValue  + sourceRect.height() * sinValue;
+		 
+		 return new RectF(centerX - width / 2,
+		                  centerY - height / 2,
+		                  centerX + width / 2,
+		                  centerY + height /2);
+	 }
+	
 	private void testLinGradFill(Canvas canvas) {
 		Paint p = new Paint();
 
@@ -122,12 +155,7 @@ public class TestView extends View {
 		
 		ShapeGradFill gradFill = new ShapeGradFill(path, canvas, p, dstRect, fillToRect, tileRect, colors, positions);
 		
-		PointF[] startPoints = getStar5Poins(dstRect);
-		float[] points = new float[startPoints.length * 2];
-		for (int i = 0; i < startPoints.length; i ++) {
-			points[i * 2] = startPoints[i].x;
-			points[i * 2 + 1] = startPoints[i].y;
-		}
+		PointF[] points = getStar5Poins(dstRect);
 		gradFill.setPoints(points);
 		gradFill.gradFill();
 	}
@@ -158,14 +186,6 @@ public class TestView extends View {
 		return vertexes;
 	}
 	
-	private float[] getTrianglePoins(RectF dstRect) {
-		float[] points = PathGradFillBase.createPointArray(
-			dstRect.width()/2, 0,
-			dstRect.width(), dstRect.height(),
-			0, dstRect.height());
-		return points;
-	}
-	
 	private void testRectGradFill(Canvas canvas) {
 		Paint p = new Paint();
 
@@ -183,8 +203,8 @@ public class TestView extends View {
 		Path path = new Path();
 		path.addRect(dstRect, Direction.CW);
 		
-		RectF fillToRect = new RectF(0.3f, 0.3f, 0.2f, 0.6f);
-		RectF tileRect = new RectF(0, 0, 0, 0);
+		RectF fillToRect = new RectF(0.4f, 0.5f, 0.4f, 0.5f);
+		RectF tileRect = new RectF(1f/3, 1f/3, 1f/3, 1f/3);
 		
 		RectGradFill gradFill = new RectGradFill(path, canvas, p, dstRect, fillToRect, tileRect, colors, positions);
 		gradFill.gradFill();
@@ -203,12 +223,12 @@ public class TestView extends View {
 		positions[1] = 0.5f;
 		positions[2] = 1f;
 		
-		RectF dstRect = new RectF(0, 0, canvas.getHeight(), canvas.getHeight() / 3);
+		RectF dstRect = new RectF(0, 0, this.getHeight(), this.getHeight());
 		Path path = new Path();
 		path.addRect(dstRect, Direction.CW);
 		
 		RectF fillToRect = new RectF(1f, 1f, 0f, 0f);
-		RectF tileRect = new RectF(0, 0, 0, 0);
+		RectF tileRect = new RectF(0, 0, -1, -1);
 		
 		CircleGradFill gradFill = new CircleGradFill(path, canvas, p, dstRect, fillToRect, tileRect, colors, positions);
 		gradFill.gradFill();

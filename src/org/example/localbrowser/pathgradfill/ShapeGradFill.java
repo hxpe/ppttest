@@ -23,15 +23,31 @@ public class ShapeGradFill extends RectGradFill {
 		if (supportFillForPath()) {
 			// 基于任意形状路径的填充方法现在还有问题,限制使用范围
 			fillForPath();
-		} else if (getPoints() != null) {
-			// 如果纯粹是n条直线拼成的闭合path，可以分解成n个点到直线的渐变
-			gradFillForLinesPath(createPointArray(fillToRect.centerX(), 
-					fillToRect.centerY()), true);
+		} else if (getPoints() == null || isRectShape(getPoints())) {
+            // 其它暂时处理成Rect填充了，而如果是Rect转化Rect渐变为了更好处理焦点框情况
+            super.gradFill();
+
 		} else {
-			// 其它暂时处理成Rect填充了
-			super.gradFill();
+            // 如果纯粹是n条直线拼成的闭合path，可以分解成点到n条直线的渐变
+            gradFillForLinesPath(getCenter(), true);
 		}
 	}
+
+    private boolean isRectShape(PointF[] points) {
+        if (points.length != 4)
+            return false;
+        for (int i = 0; i < points.length; i++) {
+            PointF p = points[i];
+            if (!isSamePoint(p.x, p.y, dstRect.left, dstRect.top) &&
+                    !isSamePoint(p.x, p.y, dstRect.right, dstRect.top) &&
+                    !isSamePoint(p.x, p.y, dstRect.right, dstRect.bottom) &&
+                    !isSamePoint(p.x, p.y, dstRect.left, dstRect.bottom)) {
+                return false;
+            }
+        }
+
+        return  true;
+    }
 	
 	/**
 	 * 求走过Path的所有点，并分别作渐变焦点到这所有点的渐变
@@ -55,6 +71,6 @@ public class ShapeGradFill extends RectGradFill {
 	}
 	
 	private boolean supportFillForPath() {
-		return false;
+        return false;
 	}
 }
