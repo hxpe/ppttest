@@ -1,10 +1,14 @@
 package org.example.localbrowser.pathgradfill;
 
+
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PointF;
 import android.graphics.RadialGradient;
 import android.graphics.RectF;
+import android.graphics.Region;
+import android.graphics.Path.Direction;
 import android.graphics.Shader.TileMode;
 
 /**
@@ -12,30 +16,126 @@ import android.graphics.Shader.TileMode;
  */
 public class CircleGradFill extends PathGradFillBase
 {
-	@Override
-	public void gradFill(Path path, Canvas canvas, Paint fillPaint, 
+	public CircleGradFill(Path path, Canvas canvas, Paint fillPaint, 
 			RectF dstRect, RectF fillToRect, RectF tileRect,
 			int[] colors, float[] positions) {
-		if (fillToRect == null)
-			fillToRect = new RectF(1.0f, 1.0F, 0, 0); // 默认右下角
-		if (tileRect == null)
-			tileRect = new RectF(); // 默认占满dstRect
+		super(path, canvas, fillPaint, dstRect, fillToRect, tileRect, colors, positions);
+	}
+	
+	@Override
+	protected void adjustParams(boolean adustDstRectForRotation) {
+		super.adjustParams(adustDstRectForRotation);
 		
-		fillToRect = transPercentageRect(fillToRect, dstRect);
-		tileRect = transPercentageRect(tileRect, dstRect);
-		
-		float radius = getRadius(fillToRect, tileRect);
-		
-		if (fillToRect.width() > 0){
-			// 渐变位置从焦点框外算起
-			positions = getNewColorPositions(positions, fillToRect.width() / 2 / radius);
+		if (haveMoreTile()) {
+			// 对于circle填充，tileRect进行修正
+			float radius = (float)Math.sqrt((this.tileRect.width() / 2) *(this.tileRect.width() / 2) +
+					(this.tileRect.height() / 2) * (this.tileRect.height() / 2));
+			float centerX = this.tileRect.centerX();
+			float centerY = this.tileRect.centerY();
+			this.tileRect.set(centerX - radius, centerY - radius, centerX + radius, centerY + radius);
 		}
+	}
+	
+	@Override
+	protected void beginFill() {
+		adjustParams(true);
+		updateNewColorPositions();
 		
-		RadialGradient shader = new RadialGradient(fillToRect.centerX(), fillToRect.centerY(),
-				radius, colors, positions, TileMode.MIRROR);
+		this.canvas.save();
+		this.canvas.clipPath(this.path);
+		if (!rotWithShape && rotation != 0) {
+			this.canvas.concat(getRotationMatric(dstRect.centerX(), dstRect.centerY(), -rotation));
+		}
+	}
+
+	@Override
+	protected void doFill() {
+		fillForCircle(getCenter(), getTileRadius());
+		
+		if (haveMoreTile()) {
+			tileGradFill(new ITileFillAction() {
+				public void tileAction() {
+					fillForCircle(getCenter(), getTileRadius());
+				}
+			});
+		}
+	}
+	
+	/**
+	 * Circle渐变填充
+	 */
+	private void fillForCircle(PointF centerF, float radius) {
+		RadialGradient shader = new RadialGradient(centerF.x, centerF.y,
+				radius, colors, positions, TileMode.CLAMP);
 		canvas.save();
 		fillPaint.setShader(shader);
-		canvas.drawPath(path, fillPaint);
+		if (haveMoreTile()) {
+			Path clipPath = new Path();
+			clipPath.addCircle(tileRect.centerX(), tileRect.centerY(),
+					tileRect.width() / 2, Direction.CW);
+			canvas.clipPath(clipPath);
+		} 
+		
+		canvas.drawPath(adjustPath, fillPaint);
+		
 		canvas.restore();
+	}
+
+    /**
+     * 根据焦点框所占比例获取调整后的渐变位置列表
+     * 只有焦点框不是一个点才需要
+     * @return
+     */
+    private void updateNewColorPositions() {
+        if (positions == null)
+            return;
+        float focusPercent = getFocusPercent();
+        if (focusPercent == 0)
+            return;
+        float remain = 1 - focusPercent;
+        float[] newPosition = new float[positions.length];
+        for (int i = 0; i < positions.length; i++) {
+            newPosition[i] = focusPercent + positions[i] * remain;
+        }
+
+        positions = newPosition;
+    }
+	
+	private float getFocusPercent() {
+		if (fillToRect.width() == 0 && fillToRect.height() == 0)
+			return 0f;
+		float focusRadius = Math.max(fillToRect.width(), fillToRect.height()) / 2; 
+		return focusRadius / getTileRadius();
+	}
+	
+	private float getTileRadius() {
+        float focusRadius = 0;
+        if (!haveMoreTile()) {
+            // 取离焦点最远的那个角来计算渐变半径
+            float destX = fillToRect.centerX();
+            float destY = fillToRect.centerY();
+            if (destX < tileRect.centerX()) {
+                if (destY < tileRect.centerY()) {
+                    destX = tileRect.right;
+                    destY = tileRect.bottom;
+                } else {
+                    destX = tileRect.right;
+                    destY = tileRect.top;
+                }
+            } else {
+                if (destY < tileRect.centerY()) {
+                    destX = tileRect.left;
+                    destY = tileRect.bottom;
+                } else {
+                    destX = tileRect.left;
+                    destY = tileRect.top;
+                }
+            }
+            focusRadius = (float) Math.sqrt((fillToRect.centerX() - destX) * (fillToRect.centerX() - destX) +
+                    (fillToRect.centerY() - destY) * (fillToRect.centerY() - destY));
+        }
+        if (focusRadius == 0)
+            focusRadius = tileRect.width() / 2;
+		return focusRadius;
 	}
 }
