@@ -18,8 +18,17 @@ public class ShapeGradFill extends RectGradFill {
 			int[] colors, float[] positions) {
 		super(path, canvas, fillPaint, dstRect, fillToRect, tileRect, colors, positions);
 	}
+	
 	@Override
-	public void gradFill() {
+	protected void beginFill() {
+		adjustParams(false);
+		
+		this.canvas.save();
+		this.canvas.clipPath(this.path);
+	}
+	
+	@Override
+	protected void doFill() {
 		if (supportFillForPath()) {
 			// 基于任意形状路径的填充方法现在还有问题,限制使用范围
 			fillForPath();

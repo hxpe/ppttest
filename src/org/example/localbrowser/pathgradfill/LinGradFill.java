@@ -26,7 +26,15 @@ public class LinGradFill extends PathGradFillBase {
 	}
 	
 	@Override
-	public void gradFill() {
+	protected void beginFill() {
+		adjustParams(false);
+		
+		this.canvas.save();
+		this.canvas.clipPath(this.path);
+	}
+	
+	@Override
+	protected void doFill() {
 		float angle = scaleAngle(this.scaled, this.oriAngle);
 		// 始终以左上角为渐变起点，并根据角度寻找渐变终点
 		PointF start = new PointF(tileRect.left, tileRect.top);

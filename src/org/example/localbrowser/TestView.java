@@ -17,6 +17,7 @@ import android.graphics.ComposeShader;
 import android.graphics.LinearGradient;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Paint.Style;
 import android.graphics.Path;
 import android.graphics.PathMeasure;
 import android.graphics.PointF;
@@ -89,24 +90,8 @@ public class TestView extends View {
 		canvas.restore();
 		p.setColor(Color.RED);
 		p.setAlpha(50);
-		canvas.drawRect(getRotationRect(testRctF, rot), p);
+		canvas.drawRect(PathGradFillBase.getRotationRect(testRctF, rot), p);
 	}
-	
-	private RectF getRotationRect(RectF sourceRect, float rotation)
-	 {
-		 float centerX = sourceRect.centerX();
-		 float centerY = sourceRect.centerY();
-		 
-		 float cosValue = Math.abs((float)Math.cos(rotation * Math.PI / 180));
-		 float sinValue = Math.abs((float)Math.sin(rotation * Math.PI / 180));
-		 float height = sourceRect.height() * cosValue + sourceRect.width() * sinValue;
-		 float width = sourceRect.width() * cosValue  + sourceRect.height() * sinValue;
-		 
-		 return new RectF(centerX - width / 2,
-		                  centerY - height / 2,
-		                  centerX + width / 2,
-		                  centerY + height /2);
-	 }
 	
 	private void testLinGradFill(Canvas canvas) {
 		Paint p = new Paint();
@@ -126,10 +111,10 @@ public class TestView extends View {
 		path.addRect(dstRect, Direction.CW);
 		
 		RectF fillToRect = null;
-		RectF tileRect = null;new RectF(1f/3, 1f/3, 1f/3, 1f/3);
+		RectF tileRect = new RectF(1f/3, 1f/3, 1f/3, 1f/3);
 		
 		LinGradFill gradFill = new LinGradFill(path, canvas, p, dstRect, fillToRect, tileRect, colors, positions);
-		gradFill.setLinParam(true, 45);
+		gradFill.setLinParam(false, 45);
 		gradFill.setRotParam(false, 30);
 		
 		canvas.save();
@@ -206,14 +191,21 @@ public class TestView extends View {
 		positions[1] = 0.5f;
 		positions[2] = 1f;
 		
-		RectF dstRect = new RectF(0, 0, this.getHeight(), this.getHeight());
+		RectF dstRect = new RectF(100, 100, this.getHeight() + 100, this.getHeight() - 100);
 		Path path = new Path();
 		path.addRect(dstRect, Direction.CW);
 		
-		RectF fillToRect = new RectF(0.4f, 0.5f, 0.4f, 0.5f);
-		RectF tileRect = new RectF(1f/3, 1f/3, 1f/3, 1f/3);
+		RectF fillToRect = new RectF(0f, 0f, 1f, 1f);
+		RectF tileRect = new RectF(0, 0, 0, 0);
+		
+		Matrix matrix = new Matrix();
+		matrix.preTranslate(dstRect.centerX(), dstRect.centerY());
+		matrix.preRotate(30);
+		matrix.preTranslate(-dstRect.centerX(), -dstRect.centerY());
+		canvas.concat(matrix);
 		
 		RectGradFill gradFill = new RectGradFill(path, canvas, p, dstRect, fillToRect, tileRect, colors, positions);
+		gradFill.setRotParam(true, 30);
 		gradFill.gradFill();
 	}
 	
@@ -230,14 +222,21 @@ public class TestView extends View {
 		positions[1] = 0.5f;
 		positions[2] = 1f;
 		
-		RectF dstRect = new RectF(0, 0, this.getHeight(), this.getHeight());
+		RectF dstRect = new RectF(100, 100, this.getHeight() + 100, this.getHeight() - 100);
 		Path path = new Path();
 		path.addRect(dstRect, Direction.CW);
 		
-		RectF fillToRect = new RectF(1f, 1f, 0f, 0f);
-		RectF tileRect = new RectF(0, 0, -1, -1);
+		RectF fillToRect = new RectF(0f, 0f, 1f, 1f);
+		RectF tileRect = new RectF(0, 0, 0, 0);
+		
+		Matrix matrix = new Matrix();
+		matrix.preTranslate(dstRect.centerX(), dstRect.centerY());
+		matrix.preRotate(30);
+		matrix.preTranslate(-dstRect.centerX(), -dstRect.centerY());
+		canvas.concat(matrix);
 		
 		CircleGradFill gradFill = new CircleGradFill(path, canvas, p, dstRect, fillToRect, tileRect, colors, positions);
+		gradFill.setRotParam(false, 30);
 		gradFill.gradFill();
 	}
 	

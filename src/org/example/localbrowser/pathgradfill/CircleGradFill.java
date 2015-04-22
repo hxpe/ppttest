@@ -20,7 +20,12 @@ public class CircleGradFill extends PathGradFillBase
 			RectF dstRect, RectF fillToRect, RectF tileRect,
 			int[] colors, float[] positions) {
 		super(path, canvas, fillPaint, dstRect, fillToRect, tileRect, colors, positions);
-
+	}
+	
+	@Override
+	protected void adjustParams(boolean adustDstRectForRotation) {
+		super.adjustParams(adustDstRectForRotation);
+		
 		if (haveMoreTile()) {
 			// 对于circle填充，tileRect进行修正
 			float radius = (float)Math.sqrt((this.tileRect.width() / 2) *(this.tileRect.width() / 2) +
@@ -30,12 +35,21 @@ public class CircleGradFill extends PathGradFillBase
 			this.tileRect.set(centerX - radius, centerY - radius, centerX + radius, centerY + radius);
 		}
 	}
-
+	
 	@Override
-	public void gradFill() {
+	protected void beginFill() {
+		adjustParams(true);
 		updateNewColorPositions();
+		
 		this.canvas.save();
 		this.canvas.clipPath(this.path);
+		if (!rotWithShape && rotation != 0) {
+			this.canvas.concat(getRotationMatric(dstRect.centerX(), dstRect.centerY(), -rotation));
+		}
+	}
+
+	@Override
+	protected void doFill() {
 		fillForCircle(getCenter(), getTileRadius());
 		
 		if (haveMoreTile()) {
@@ -45,7 +59,6 @@ public class CircleGradFill extends PathGradFillBase
 				}
 			});
 		}
-		this.canvas.restore();
 	}
 	
 	/**
@@ -61,8 +74,16 @@ public class CircleGradFill extends PathGradFillBase
 			clipPath.addCircle(tileRect.centerX(), tileRect.centerY(),
 					tileRect.width() / 2, Direction.CW);
 			canvas.clipPath(clipPath);
+			canvas.drawPath(clipPath, fillPaint);
+		} else if (!rotWithShape && rotation != 0) {
+			Path clipPath = new Path();
+			clipPath.addRect(tileRect, Direction.CW);
+			canvas.clipPath(clipPath);
+			canvas.drawPath(clipPath, fillPaint);
+		} else {
+			canvas.drawPath(path, fillPaint);
 		}
-		canvas.drawPath(path, fillPaint);
+		
 		canvas.restore();
 	}
 

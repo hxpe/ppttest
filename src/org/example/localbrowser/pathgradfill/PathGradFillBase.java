@@ -22,12 +22,14 @@ public abstract class PathGradFillBase {
 	protected int[] colors;
 	protected float[] positions;
 	
+	private RectF oriDstRect;
+	private RectF oriFillToRect;
+	private RectF oriTileRect;
+	
 	private PointF[] points;
 	protected Matrix matrix;
 	private PointF tempCenterF;
 	
-	// 对象已经本身已经附加了一个旋转矩阵,即默认已经跟随旋转
-	// 这里只处理rotWithShape等于false的情况，反向旋转回去
 	protected float rotation = 0f;
 	protected boolean rotWithShape = true; 
 	
@@ -41,16 +43,40 @@ public abstract class PathGradFillBase {
 		this.path = path;
 		this.canvas = canvas;
 		this.fillPaint = fillPaint;
-		this.dstRect = dstRect;
 		this.colors = colors;
 		this.positions = positions;
-
-		if (fillToRect == null)
-			fillToRect = new RectF(0, 0, 1.0f, 1.0f); // 默认左上角
-		if (tileRect == null)
-			tileRect = new RectF(); // 默认占满dstRect
-		this.fillToRect = transPercentageRect(fillToRect, dstRect);
-		this.tileRect = transPercentageRect(tileRect, dstRect);
+		
+		this.oriDstRect = dstRect;
+		this.oriFillToRect = fillToRect;
+		this.oriTileRect = tileRect;
+	}
+	
+	public void gradFill() {
+		beginFill();
+		try {
+			doFill();
+		} finally {
+			afterFill();
+		}
+	}
+	
+	/**
+	 * 主要填充实现方法
+	 */
+	protected abstract void doFill();
+	
+	protected void beginFill() {
+		adjustParams(true);
+		
+		this.canvas.save();
+		this.canvas.clipPath(this.path);
+		if (!rotWithShape && rotation != 0) {
+			this.canvas.concat(getRotationMatric(dstRect.centerX(), dstRect.centerY(), -rotation));
+		}
+	}
+	
+	protected void afterFill() {
+		this.canvas.restore();
 	}
 	
 	public void setPoints(PointF[] points) {
@@ -66,8 +92,24 @@ public abstract class PathGradFillBase {
 		this.rotation = rotation;
 	}
 	
-	public abstract void gradFill();
+	protected void adjustParams(boolean adustDstRectForRotation) {
+		if (oriFillToRect == null)
+			oriFillToRect = new RectF(0, 0, 1.0f, 1.0f); // 默认左上角
+		if (oriTileRect == null)
+			oriTileRect = new RectF(); // 默认占满dstRect
+		
+		// 对象本身已经附加了一个旋转矩阵,即默认已经跟随旋转
+		// 这里只处理rotWithShape等于false的情况，反向旋转回去
+		if (adustDstRectForRotation && !rotWithShape && rotation != 0) {
+			dstRect = getRotationRect(oriDstRect, rotation);
+		} else {
+			this.dstRect = oriDstRect;
+		}
 
+		fillToRect = transPercentageRect(oriFillToRect, dstRect);
+		tileRect = transPercentageRect(oriTileRect, dstRect);
+	}
+	
 	/**
 	 * 渐变的中心点
 	 */
@@ -90,6 +132,8 @@ public abstract class PathGradFillBase {
 	
 	/**
 	 * 一个点到n条直线组成的闭合形状的渐变
+	 * @param gradCenter 渐变起点
+	 * @param closePath 路径是否闭合
 	 */
 	protected void gradFillForLinesPath(PointF gradCenter, boolean closePath) {
 		if (points == null || points.length < 2)
@@ -108,6 +152,7 @@ public abstract class PathGradFillBase {
 	
 	/**
 	 * tileRect周围的区域重复应用平铺动作
+	 * @param action 填充动作
 	 */
 	protected void tileGradFill(ITileFillAction action) {
 		if (action == null)
@@ -137,25 +182,58 @@ public abstract class PathGradFillBase {
 	/**
 	 * 附加翻转矩阵重新填充
 	 */
-	private void rotateToTile(ITileFillAction action, float rotateX, float rotateY, float dx, float dy) {
+	private void rotateToTile(ITileFillAction action, float px, float py, float sx, float sy) {
 		if (action == null)
 			return;
-		if (matrix == null)
-			matrix = new Matrix();
-		else 
-			matrix.reset();
-		matrix.preTranslate(rotateX, rotateY);
-		matrix.preScale(dx, dy);
-		matrix.preTranslate(-rotateX, -rotateY);
 		
 		canvas.save();
-		canvas.concat(matrix);
+		canvas.concat(getScaleMatric(px, py, sx, sy));
 		action.tileAction();
 		canvas.restore();
 	}
 	
 	/**
+	 * 获取缩放矩阵
+	 * @param px
+	 * @param py
+	 * @param sx
+	 * @param sy
+	 * @return
+	 */
+	protected Matrix getScaleMatric(float px, float py, float sx, float sy) {
+		if (matrix == null)
+			matrix = new Matrix();
+		else 
+			matrix.reset();
+		matrix.preTranslate(px, py);
+		matrix.preScale(sx, sy);
+		matrix.preTranslate(-px, -py);
+		return matrix;
+	}
+	
+	/**
+	 * 获取旋转矩阵
+	 * @param px
+	 * @param py
+	 * @param degrees
+	 * @return
+	 */
+	protected Matrix getRotationMatric(float px, float py, float degrees) {
+		if (matrix == null)
+			matrix = new Matrix();
+		else 
+			matrix.reset();
+		matrix.preTranslate(px, py);
+		matrix.preRotate(degrees);
+		matrix.preTranslate(-px, -py);
+		return matrix;
+	}
+	
+	/**
 	 * 一个点到一条边的渐变，这里定义为点到垂足的渐变，triangle名称义指clipPath区域形状
+	 * @param gradCenter 渐变起点
+	 * @param lineStart 直线上一点
+	 * @param lineEnd 直线上另一点
 	 */
 	protected void gradFillForTriangle(PointF gradCenter, PointF lineStart, PointF lineEnd) {
 		PointF footPointF = getFootPoint(gradCenter, lineStart, lineEnd);
@@ -184,8 +262,7 @@ public abstract class PathGradFillBase {
 	protected void lineGradFill(Path clippath, PointF start, PointF end,
 			float dx, float dy) {
 		canvas.save();
-		if (clippath != null)
-			canvas.clipPath(clippath);
+		
 		LinearGradient lg = new LinearGradient(start.x, start.y, 
 				end.x, end.y, colors, positions, TileMode.MIRROR);
 		if (dx != 0 || dy != 0) {
@@ -194,7 +271,13 @@ public abstract class PathGradFillBase {
 			lg.setLocalMatrix(matrix);
 		}
 		fillPaint.setShader(lg);
-		canvas.drawPath(path, fillPaint);
+		if (clippath != null) {
+			canvas.clipPath(clippath);
+			canvas.drawPath(clippath, fillPaint);
+		} else {
+			canvas.drawPath(path, fillPaint);
+		}
+		fillPaint.setShader(null);
 		canvas.restore();
 	}
 	
@@ -274,4 +357,26 @@ public abstract class PathGradFillBase {
         float precision = 0.0001f;
         return ((Math.abs(x1 - x2) < precision) && (Math.abs(y1 - y2) < precision));
     }
+    
+    /**
+     * 计算旋转后的Rect
+     * @param sourceRect
+     * @param rotation
+     * @return
+     */
+    static public RectF getRotationRect(RectF sourceRect, float rotation)
+	 {
+		 float centerX = sourceRect.centerX();
+		 float centerY = sourceRect.centerY();
+		 
+		 float cosValue = Math.abs((float)Math.cos(rotation * Math.PI / 180));
+		 float sinValue = Math.abs((float)Math.sin(rotation * Math.PI / 180));
+		 float height = sourceRect.height() * cosValue + sourceRect.width() * sinValue;
+		 float width = sourceRect.width() * cosValue  + sourceRect.height() * sinValue;
+		 
+		 return new RectF(centerX - width / 2,
+		                  centerY - height / 2,
+		                  centerX + width / 2,
+		                  centerY + height /2);
+	 }
 }

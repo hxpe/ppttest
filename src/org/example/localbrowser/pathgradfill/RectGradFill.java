@@ -1,11 +1,14 @@
 package org.example.localbrowser.pathgradfill;
 
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
 import android.graphics.RectF;
+import android.graphics.Paint.Style;
+import android.util.EventLogTags.Description;
 
 /**
  * rect类型的渐变填充实现
@@ -18,21 +21,16 @@ public class RectGradFill extends PathGradFillBase {
 	}
 	
 	@Override
-	public void gradFill() {
-
-		this.canvas.save();
-		this.canvas.clipPath(this.path);
+	protected void doFill() {
         fillForRect();
 		
 		if (haveMoreTile()) {
 			tileGradFill(new ITileFillAction() {
 				public void tileAction() {
-                fillForRect();
-					
+					fillForRect();
 				}
 			});
 		}
-		this.canvas.restore();
 	}
 
     private void fillForRect() {
@@ -42,11 +40,11 @@ public class RectGradFill extends PathGradFillBase {
         tilePoints[2] = new PointF(tileRect.right, tileRect.bottom);
         tilePoints[3] = new PointF(tileRect.left, tileRect.bottom);
 
-        PointF[] filePoints = new PointF[4];
-        filePoints[0] = new PointF(fillToRect.left, fillToRect.top);
-        filePoints[1] = new PointF(fillToRect.right,fillToRect.top);
-        filePoints[2] = new PointF(fillToRect.right, fillToRect.bottom);
-        filePoints[3] = new PointF(fillToRect.left, fillToRect.bottom);
+        PointF[] fillPoints = new PointF[4];
+        fillPoints[0] = new PointF(fillToRect.left, fillToRect.top);
+        fillPoints[1] = new PointF(fillToRect.right,fillToRect.top);
+        fillPoints[2] = new PointF(fillToRect.right, fillToRect.bottom);
+        fillPoints[3] = new PointF(fillToRect.left, fillToRect.bottom);
 
         if (fillToRect.width() > 0 && fillToRect.height() > 0) {
             // 纯色填充焦点框
@@ -57,13 +55,13 @@ public class RectGradFill extends PathGradFillBase {
         }
 
         // 上
-        gradFillForParallelTwoLine(filePoints[0], filePoints[1], tilePoints[1], tilePoints[0]);
+        gradFillForParallelTwoLine(fillPoints[0], fillPoints[1], tilePoints[1], tilePoints[0]);
         // 右
-        gradFillForParallelTwoLine(filePoints[1], filePoints[2], tilePoints[2], tilePoints[1]);
+        gradFillForParallelTwoLine(fillPoints[1], fillPoints[2], tilePoints[2], tilePoints[1]);
         // 下
-        gradFillForParallelTwoLine(filePoints[2], filePoints[3], tilePoints[3], tilePoints[2]);
+        gradFillForParallelTwoLine(fillPoints[2], fillPoints[3], tilePoints[3], tilePoints[2]);
         // 左
-        gradFillForParallelTwoLine(filePoints[0], filePoints[3], tilePoints[3], tilePoints[0]);
+        gradFillForParallelTwoLine(fillPoints[0], fillPoints[3], tilePoints[3], tilePoints[0]);
     }
 
     /**
