@@ -7,6 +7,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
 import android.graphics.RectF;
+import android.graphics.Path.Direction;
 import android.graphics.Shader.TileMode;
 
 /**
@@ -14,6 +15,7 @@ import android.graphics.Shader.TileMode;
  */
 public abstract class PathGradFillBase {
 	protected Path path;
+	protected Path adjustPath;
 	protected Canvas canvas;
 	protected Paint fillPaint;
 	protected RectF dstRect;
@@ -102,8 +104,11 @@ public abstract class PathGradFillBase {
 		// 这里只处理rotWithShape等于false的情况，反向旋转回去
 		if (adustDstRectForRotation && !rotWithShape && rotation != 0) {
 			dstRect = getRotationRect(oriDstRect, rotation);
+			adjustPath = new Path();
+			adjustPath.addRect(dstRect, Direction.CW);
 		} else {
 			this.dstRect = oriDstRect;
+			adjustPath = path;
 		}
 
 		fillToRect = transPercentageRect(oriFillToRect, dstRect);
@@ -273,10 +278,10 @@ public abstract class PathGradFillBase {
 		fillPaint.setShader(lg);
 		if (clippath != null) {
 			canvas.clipPath(clippath);
-			canvas.drawPath(clippath, fillPaint);
-		} else {
-			canvas.drawPath(path, fillPaint);
-		}
+		} 
+			
+		canvas.drawPath(adjustPath, fillPaint);
+		
 		fillPaint.setShader(null);
 		canvas.restore();
 	}

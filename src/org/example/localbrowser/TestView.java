@@ -70,7 +70,7 @@ public class TestView extends View {
 
 	public void onDraw(Canvas canvas) {
 		long startCount = System.currentTimeMillis();
-		testLinGradFill(canvas);
+		testCircleGradFill(canvas);
 		long endCount = System.currentTimeMillis();
 		long des = endCount - startCount;
 		Log.d("onDraw", "abcdefg" + des);
@@ -205,7 +205,7 @@ public class TestView extends View {
 		canvas.concat(matrix);
 		
 		RectGradFill gradFill = new RectGradFill(path, canvas, p, dstRect, fillToRect, tileRect, colors, positions);
-		gradFill.setRotParam(true, 30);
+		gradFill.setRotParam(false, 30);
 		gradFill.gradFill();
 	}
 	
@@ -226,8 +226,8 @@ public class TestView extends View {
 		Path path = new Path();
 		path.addRect(dstRect, Direction.CW);
 		
-		RectF fillToRect = new RectF(0f, 0f, 1f, 1f);
-		RectF tileRect = new RectF(0, 0, 0, 0);
+		RectF fillToRect = new RectF(0.5f, 0.5f, 0.5f, 0.5f);
+		RectF tileRect = new RectF(1f/3, 1f/3, 1f/3, 1f/3);
 		
 		Matrix matrix = new Matrix();
 		matrix.preTranslate(dstRect.centerX(), dstRect.centerY());

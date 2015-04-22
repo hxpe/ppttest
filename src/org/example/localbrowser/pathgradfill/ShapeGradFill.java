@@ -34,7 +34,7 @@ public class ShapeGradFill extends RectGradFill {
 			fillForPath();
 		} else if (getPoints() == null || isRectShape(getPoints())) {
             // 其它暂时处理成Rect填充了，而如果是Rect转化Rect渐变为了更好处理焦点框情况
-            super.gradFill();
+            super.doFill();
 
 		} else {
             // 如果纯粹是n条直线拼成的闭合path，可以分解成点到n条直线的渐变

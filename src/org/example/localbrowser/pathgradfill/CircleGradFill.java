@@ -74,15 +74,9 @@ public class CircleGradFill extends PathGradFillBase
 			clipPath.addCircle(tileRect.centerX(), tileRect.centerY(),
 					tileRect.width() / 2, Direction.CW);
 			canvas.clipPath(clipPath);
-			canvas.drawPath(clipPath, fillPaint);
-		} else if (!rotWithShape && rotation != 0) {
-			Path clipPath = new Path();
-			clipPath.addRect(tileRect, Direction.CW);
-			canvas.clipPath(clipPath);
-			canvas.drawPath(clipPath, fillPaint);
-		} else {
-			canvas.drawPath(path, fillPaint);
-		}
+		} 
+		
+		canvas.drawPath(adjustPath, fillPaint);
 		
 		canvas.restore();
 	}
