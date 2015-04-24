@@ -183,10 +183,12 @@ public class TestView extends View {
 
 		int[] colors = new int[3];
 		float[] positions = new float[3];
+		
+		canvas.drawColor(Color.WHITE);
 
-		colors[0] = Color.BLUE;
-		colors[1] = Color.YELLOW;
-		colors[2] = Color.GREEN;
+		colors[0] = 0;
+		colors[1] = -6506386;
+		colors[2] = -15373549;
 		positions[0] = 0f;
 		positions[1] = 0.5f;
 		positions[2] = 1f;
@@ -195,17 +197,17 @@ public class TestView extends View {
 		Path path = new Path();
 		path.addRect(dstRect, Direction.CW);
 		
-		RectF fillToRect = new RectF(0f, 0f, 1f, 1f);
+		RectF fillToRect = new RectF(0.4f, 0.4f, 0.4f, 0.4f);
 		RectF tileRect = new RectF(0, 0, 0, 0);
 		
 		Matrix matrix = new Matrix();
 		matrix.preTranslate(dstRect.centerX(), dstRect.centerY());
-		matrix.preRotate(30);
+		matrix.preRotate(0);
 		matrix.preTranslate(-dstRect.centerX(), -dstRect.centerY());
 		canvas.concat(matrix);
 		
 		RectGradFill gradFill = new RectGradFill(path, canvas, p, dstRect, fillToRect, tileRect, colors, positions);
-		gradFill.setRotParam(false, 30);
+		gradFill.setRotParam(true, 0);
 		gradFill.gradFill();
 	}
 	
@@ -219,24 +221,25 @@ public class TestView extends View {
 		colors[1] = Color.YELLOW;
 		colors[2] = Color.GREEN;
 		positions[0] = 0f;
-		positions[1] = 0.5f;
+		positions[1] = 0.4f;
 		positions[2] = 1f;
 		
-		RectF dstRect = new RectF(100, 100, this.getHeight() + 100, this.getHeight() - 100);
+		RectF dstRect = new RectF(0, 0, this.getWidth()/ 2, this.getHeight() / 2);
 		Path path = new Path();
 		path.addRect(dstRect, Direction.CW);
 		
-		RectF fillToRect = new RectF(0.5f, 0.5f, 0.5f, 0.5f);
-		RectF tileRect = new RectF(1f/3, 1f/3, 1f/3, 1f/3);
+		RectF fillToRect = new RectF(0.5f, -0.8f, 0.5f, 1.8f);
+		RectF tileRect = new RectF(0, 0, 0, 0);
 		
 		Matrix matrix = new Matrix();
 		matrix.preTranslate(dstRect.centerX(), dstRect.centerY());
-		matrix.preRotate(30);
+		matrix.preRotate(0);
 		matrix.preTranslate(-dstRect.centerX(), -dstRect.centerY());
 		canvas.concat(matrix);
 		
+		canvas.scale(2, 2);
 		CircleGradFill gradFill = new CircleGradFill(path, canvas, p, dstRect, fillToRect, tileRect, colors, positions);
-		gradFill.setRotParam(false, 30);
+		gradFill.setRotParam(false, 0);
 		gradFill.gradFill();
 	}
 	

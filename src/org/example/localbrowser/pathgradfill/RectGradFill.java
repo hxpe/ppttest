@@ -48,10 +48,10 @@ public class RectGradFill extends PathGradFillBase {
 
         if (fillToRect.width() > 0 && fillToRect.height() > 0) {
             // 纯色填充焦点框
-            canvas.save();
+            int oriColor = fillPaint.getColor();
             fillPaint.setColor(colors[0]);
             canvas.drawRect(fillToRect.left, fillToRect.top, fillToRect.right, fillToRect.bottom, fillPaint);
-            canvas.restore();
+            fillPaint.setColor(oriColor);
         }
 
         // 上
