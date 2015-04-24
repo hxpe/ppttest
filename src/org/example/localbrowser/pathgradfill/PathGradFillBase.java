@@ -279,9 +279,7 @@ public abstract class PathGradFillBase {
 		if (clippath != null) {
 			canvas.clipPath(clippath);
 		} 
-			
 		canvas.drawPath(adjustPath, fillPaint);
-		
 		fillPaint.setShader(null);
 		canvas.restore();
 	}

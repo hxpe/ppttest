@@ -93,7 +93,6 @@ public class RectGradFill extends PathGradFillBase {
             trianglePath.lineTo(line2End.x, line2End.y);
             trianglePath.close();
 
-
             lineGradFill(trianglePath, line1Start, footPointF, 0, 0);
         }
     }

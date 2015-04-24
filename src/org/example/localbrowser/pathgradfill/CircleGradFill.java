@@ -77,7 +77,7 @@ public class CircleGradFill extends PathGradFillBase
 		} 
 		
 		canvas.drawPath(adjustPath, fillPaint);
-		
+		fillPaint.setShader(null);
 		canvas.restore();
 	}
 
