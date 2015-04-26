@@ -10,6 +10,7 @@ import org.example.localbrowser.pathgradfill.ShapeGradFill;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -33,8 +34,29 @@ import android.util.Log;
 import android.view.View;
 
 public class TestView extends View {
+	
 	static public interface ILog {
 		public void log(String msg);
+	}
+	
+	Bitmap mCache;
+	private Bitmap getCacheBitmap() {
+		if (mCache == null) {
+			mCache = Bitmap.createBitmap(this.getWidth(), this.getHeight(), 
+					Config.ARGB_8888);
+		} else if (mCache.getWidth() != this.getWidth() ||
+				mCache.getHeight() != this.getHeight()) {
+			mCache.recycle();
+			mCache = Bitmap.createBitmap(this.getWidth(), this.getHeight(), 
+					Config.ARGB_8888);
+		}
+		
+		return mCache;
+	}
+	
+	private Canvas getCacheCavas() {
+		Canvas canvas = new Canvas(getCacheBitmap());
+		return canvas;
 	}
 
 	private ILog mLog;
@@ -224,23 +246,26 @@ public class TestView extends View {
 		positions[1] = 0.4f;
 		positions[2] = 1f;
 		
-		RectF dstRect = new RectF(0, 0, this.getWidth()/ 2, this.getHeight() / 2);
+		RectF dstRect = new RectF(0, 0, this.getWidth(), this.getHeight());
 		Path path = new Path();
 		path.addRect(dstRect, Direction.CW);
 		
 		RectF fillToRect = new RectF(0.5f, -0.8f, 0.5f, 1.8f);
 		RectF tileRect = new RectF(0, 0, 0, 0);
 		
+		Canvas cacheCanvas = getCacheCavas();
+		
 		Matrix matrix = new Matrix();
 		matrix.preTranslate(dstRect.centerX(), dstRect.centerY());
 		matrix.preRotate(0);
 		matrix.preTranslate(-dstRect.centerX(), -dstRect.centerY());
-		canvas.concat(matrix);
+		cacheCanvas.concat(matrix);
 		
-		canvas.scale(2, 2);
-		CircleGradFill gradFill = new CircleGradFill(path, canvas, p, dstRect, fillToRect, tileRect, colors, positions);
+		CircleGradFill gradFill = new CircleGradFill(path, cacheCanvas, p, dstRect, fillToRect, tileRect, colors, positions);
 		gradFill.setRotParam(false, 0);
 		gradFill.gradFill();
+		
+		canvas.drawBitmap(mCache, 0, 0, null);
 	}
 	
 	private void testDrawLineLinearGradient(Canvas canvas) {
