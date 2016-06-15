@@ -15,17 +15,17 @@
    <WebView
       android:id="@+id/web_view"
       android:layout_width="fill_parent"
-      android:layout_height="fill_parent"
+      android:layout_height="200dp"
       android:layout_weight="1.0" />
    <org.example.localbrowser.TestView
       android:id="@+id/testView"
       android:layout_width="fill_parent"
-      android:layout_height="fill_parent"
+      android:layout_height="wrap_content"
       android:layout_weight="1.0" />
    <LinearLayout
       android:orientation="vertical"
       android:layout_width="fill_parent"
-      android:layout_height="fill_parent"
+      android:layout_height="200dp"
       android:layout_weight="1.0"
       android:padding="5sp">
       <TextView
