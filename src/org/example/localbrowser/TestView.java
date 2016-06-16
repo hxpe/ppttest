@@ -44,6 +44,8 @@ public class TestView extends View {
 		public void log(String msg);
 	}
 	
+	private VerticesControl mVerControl;
+	
 	Bitmap mCache; 
 	private Bitmap getCacheBitmap() {
 		if (mCache == null) {
@@ -97,7 +99,7 @@ public class TestView extends View {
 
 	public void onDraw(Canvas canvas) {
 		long startCount = System.currentTimeMillis();
-		testDrawVertices(canvas);
+		testDrawVertices2(canvas);
 		long endCount = System.currentTimeMillis();
 		long des = endCount - startCount;
 		Log.d("onDraw", "testDrawVertices time:" + des);
@@ -286,6 +288,7 @@ public class TestView extends View {
 		
 		int w = textureBimatp.getWidth();
         int h = textureBimatp.getHeight();
+        
         // construct our mesh
         setXY(mTexs, 0, w/2, h/2);
         setXY(mTexs, 1, 0, 0);
@@ -323,8 +326,35 @@ public class TestView extends View {
 //        canvas.restore();
 	}
 	
+	private void testDrawVertices2(Canvas canvas) {
+		Bitmap textureBimatp = getDrawableBitmap();
+		Shader s = new BitmapShader(textureBimatp, Shader.TileMode.CLAMP,
+                Shader.TileMode.CLAMP);
+		mPaint.setShader(s);
+		
+		int w = textureBimatp.getWidth();
+        int h = textureBimatp.getHeight();
+        
+        RectF renderRect = new RectF(0, 0, w, h);
+        if (mVerControl == null) {
+        	mVerControl = new VerticesControl();
+        	mVerControl.init(10, 10, renderRect);
+        }
+        mVerControl.update(renderRect, new RectF(0, 0, w, h));
+
+        canvas.drawColor(0x00);
+        canvas.save();
+        canvas.drawVertices(Canvas.VertexMode.TRIANGLES, mVerControl.mVerTexCount, mVerControl.mVerts, 0,
+        		mVerControl.mTexs, 0, null, 0, mVerControl.mIndices, 0, mVerControl.mIndices.length, mPaint);
+        canvas.restore();
+	}
+	
+	private Bitmap cacheBitmap;
 	private Bitmap getDrawableBitmap() {
-		return BitmapFactory.decodeResource(this.getResources(), R.drawable.mesh);
+		if (cacheBitmap == null) {
+			cacheBitmap = BitmapFactory.decodeResource(this.getResources(), R.drawable.mesh);
+		}
+		return cacheBitmap;
 	}
 	
 	private Matrix getCameraMatrix(int w, int h) {

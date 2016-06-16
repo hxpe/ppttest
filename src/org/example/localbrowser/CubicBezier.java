@@ -169,12 +169,14 @@ public class CubicBezier {
      * @param v v参数取值，范围[0,1] 方向向上
      * @return 插值顶点
      */
-    public Point smoothPoint(float u, float v) {
+    private Vector3f mSmoothTemp = new Vector3f();
+    public Vector3f smoothPoint(float u, float v) {
         float[] vecU = {u * u * u, u * u, u, 1};
         float[] vecV = {v * v * v, v * v, v, 1};
 
-        return new Point(calcForAxis(vecU, getXMatrix(), vecV),
+        mSmoothTemp.set(calcForAxis(vecU, getXMatrix(), vecV),
                 calcForAxis(vecU, getYMatrix(), vecV), calcForAxis(vecU, getZMatrix(), vecV));
+        return mSmoothTemp;
     }
 
     /**
@@ -183,17 +185,19 @@ public class CubicBezier {
      * @param v v参数取值，范围[0,1] 方向向上
      * @return 法向量，已经规格化
      */
-    public Point calcNormal(float u, float v) {
+    private Vector3f mNormaldpdu = new Vector3f();
+    private Vector3f mNormaldpdv = new Vector3f();
+    public Vector3f calcNormal(float u, float v) {
         float[] vecU = {u * u * u, u * u, u, 1};
         float[] vecV = {v * v * v, v * v, v, 1};
         float[] vecDU = {3.0f * u * u, 2.0f * u, 1.0f, 0};
         float[] vecDV = {3.0f * v * v, 2.0f * v, 1.0f, 0};
 
-        Point dpdu = new Point(calcForAxis(vecDU, getXMatrix(), vecV),
+        mNormaldpdu.set(calcForAxis(vecDU, getXMatrix(), vecV),
                 calcForAxis(vecDU, getYMatrix(), vecV), calcForAxis(vecDU, getZMatrix(), vecV));
-        Point dpdv = new Point(calcForAxis(vecU, getXMatrix(), vecDV),
+        mNormaldpdv.set(calcForAxis(vecU, getXMatrix(), vecDV),
                 calcForAxis(vecU, getYMatrix(), vecDV), calcForAxis(vecU, getZMatrix(), vecDV));
-        return Point.cross(dpdu, dpdv).normalize();
+        return mNormaldpdu.crossProduct2(mNormaldpdv).normalize2();
     }
 
     private float calcForAxis(float[] U, float[] matrix, float[] V) {

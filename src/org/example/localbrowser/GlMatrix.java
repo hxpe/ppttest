@@ -46,7 +46,7 @@ public class GlMatrix {
             dst[offset + i + 1] = src[1];
         }
     }
-
+    
     public static void mapPoint(GlMatrix mat, float[] dst, float[] points){
         mapPoint(mat, dst, 0, points);
     }
