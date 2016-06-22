@@ -8,14 +8,12 @@ public class VerticesControl {
 	private final static float FOVY = 45f; // 透视投影视场角
 	
 	public int mVerTexNormalCount;
-	public int mVerTextInterCount; // 附加的内插值顶点数，钝角三角形拆分成两个直角三角形，每个三角形保留一个
 	public int mCacheArrayCount; // 缓存总float数
     public float[] mVerts;
     public float[] mTexs;
     public int[] mColors; // 虽然只用到一半，但要保留和顶点一样的长度，否则崩溃
     public short[] mIndices;
     public int mIndicesRealCount; // 缓存可能还有冗余空间，这个标记真实数目
-    public int mAddInterVertCount; // 拆分三角形多出的内插顶点数
     
     protected int MeshRow = 10;
     protected int MeshCul = MeshRow;
@@ -72,8 +70,7 @@ public class VerticesControl {
     	this.MeshRow = meshRow;
     	this.MeshCul = meshCul;
     	mVerTexNormalCount = (meshRow + 1) * (meshCul + 1);
-    	mVerTextInterCount = meshCul * 2 * meshRow;
-    	mCacheArrayCount = (mVerTexNormalCount + mVerTextInterCount) * 2;
+    	mCacheArrayCount = mVerTexNormalCount * 2;
     	
     	initPerspectiveMatrix();
     	
@@ -99,7 +96,6 @@ public class VerticesControl {
     
     private void updateIndices() {
     	mIndicesRealCount = 0;
-    	mAddInterVertCount = 0;
     	int rowStrike = MeshCul + 1;
         for(int j = 0; j < MeshRow; j++) {
             for (int i = 0; i < MeshCul; i++) {
@@ -111,90 +107,9 @@ public class VerticesControl {
     }
     
     private void addIndicesTriangle(int v1, int v2, int v3) {
-    	PointF p1 = mAnyObjPool.getPoinF(mVerts[v1*2], mVerts[v1*2 + 1]);
-    	PointF p2 = mAnyObjPool.getPoinF(mVerts[v2*2], mVerts[v2*2 + 1]);
-    	PointF p3 = mAnyObjPool.getPoinF(mVerts[v3*2], mVerts[v3*2 + 1]);
-    	PointF t1 = mAnyObjPool.getPoinF(mTexs[v1*2], mTexs[v1*2 + 1]);
-    	PointF t2 = mAnyObjPool.getPoinF(mTexs[v2*2], mTexs[v2*2 + 1]);
-    	PointF t3 = mAnyObjPool.getPoinF(mTexs[v3*2], mTexs[v3*2 + 1]);
-    	float l12 = leng(p1, p2);
-    	float l13 = leng(p1, p3);
-    	float l23 = leng(p2, p3);
-    	PointF p4 = null;
-    	PointF t4 = null;
-    	if (l23 > l13 && l23 > l13 && l23 * l23 > l12 * l12 + l13 * l13) {
-    		// 内插点在p2-p3之间
-    		p4 = getFootPoint(p1, p2, p3);
-    		t4 = getFootPoint(p1, p2, p3);
-    		int color = getInnerColor(p2, p3, p4, mColors[v2], mColors[v3]);
-    		int innerStart = mVerTexNormalCount + mAddInterVertCount;
-    		mAddInterVertCount++;
-    		mColors[innerStart] = color;
-    		mVerts[innerStart * 2] = p4.x;
-    		mVerts[innerStart * 2 + 1] = p4.y;
-    		mTexs[innerStart * 2] = t4.x;
-    		mTexs[innerStart * 2 + 1] = t4.y;
-    		
-    		mIndices[mIndicesRealCount++] = (short)v1;
-        	mIndices[mIndicesRealCount++] = (short)v2;
-        	mIndices[mIndicesRealCount++] = (short)innerStart; 
-        	mIndices[mIndicesRealCount++] = (short)v1;
-        	mIndices[mIndicesRealCount++] = (short)innerStart;
-        	mIndices[mIndicesRealCount++] = (short)v3; 
-    		
-    	} else if (l13 > l12 && l13 > l23 && l13 * l13 > l12 * l12 + l23 * l23) {
-    		// 内插点在p1-p3之间
-    		p4 = getFootPoint(p2, p1, p3);
-    		t4 = getFootPoint(t2, t1, t3);
-    		int color = getInnerColor(p1, p3, p4, mColors[v1], mColors[v3]);
-    		int innerStart = mVerTexNormalCount + mAddInterVertCount;
-    		mAddInterVertCount++;
-    		mColors[innerStart] = color;
-    		mVerts[innerStart * 2] = p4.x;
-    		mVerts[innerStart * 2 + 1] = p4.y;
-    		mTexs[innerStart * 2] = t4.x;
-    		mTexs[innerStart * 2 + 1] = t4.y;
-    		
-    		mIndices[mIndicesRealCount++] = (short)v1;
-        	mIndices[mIndicesRealCount++] = (short)v2;
-        	mIndices[mIndicesRealCount++] = (short)innerStart; 
-        	mIndices[mIndicesRealCount++] = (short)innerStart;
-        	mIndices[mIndicesRealCount++] = (short)v2;
-        	mIndices[mIndicesRealCount++] = (short)v3;
-    	} else if (l12 > l13 && l12 > l23 && l12 * l12 > l13 * l13 + l23 * l23) {
-    		// 内插点在p1-p2之间
-    		p4 = getFootPoint(p3, p1, p2);
-    		t4 = getFootPoint(t3, t1, t2);
-    		int color = getInnerColor(p1, p2, p4, mColors[v1], mColors[v2]);
-    		int innerStart = mVerTexNormalCount + mAddInterVertCount;
-    		mAddInterVertCount++;
-    		mColors[innerStart] = color;
-    		mVerts[innerStart * 2] = p4.x;
-    		mVerts[innerStart * 2 + 1] = p4.y;
-    		mTexs[innerStart * 2] = t4.x;
-    		mTexs[innerStart * 2 + 1] = t4.y;
-    		
-    		mIndices[mIndicesRealCount++] = (short)v1;
-        	mIndices[mIndicesRealCount++] = (short)innerStart;
-        	mIndices[mIndicesRealCount++] = (short)v3; 
-        	mIndices[mIndicesRealCount++] = (short)innerStart;
-        	mIndices[mIndicesRealCount++] = (short)v2;
-        	mIndices[mIndicesRealCount++] = (short)v3;
-    	} else {
-    		// 锐角或直角，不需要拆分
-    		mIndices[mIndicesRealCount++] = (short)v1;
-        	mIndices[mIndicesRealCount++] = (short)v2;
-        	mIndices[mIndicesRealCount++] = (short)v3;
-    	}
-    	
-    	mAnyObjPool.tryReuse(p1);
-    	mAnyObjPool.tryReuse(p2);
-    	mAnyObjPool.tryReuse(p3);
-    	mAnyObjPool.tryReuse(p4);
-    	mAnyObjPool.tryReuse(t1);
-    	mAnyObjPool.tryReuse(t2);
-    	mAnyObjPool.tryReuse(t3);
-    	mAnyObjPool.tryReuse(t4);
+		mIndices[mIndicesRealCount++] = (short)v1;
+    	mIndices[mIndicesRealCount++] = (short)v2;
+    	mIndices[mIndicesRealCount++] = (short)v3;
     }
     
     private int getInnerColor(PointF p1, PointF p2, PointF inner, int c1, int c2) {
