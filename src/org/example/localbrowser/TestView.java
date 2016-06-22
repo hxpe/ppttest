@@ -26,6 +26,8 @@ import android.graphics.Path;
 import android.graphics.PathMeasure;
 import android.graphics.PointF;
 import android.graphics.Path.Direction;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.RadialGradient;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -33,6 +35,7 @@ import android.graphics.PorterDuff.Mode;
 import android.graphics.Shader;
 import android.graphics.Shader.TileMode;
 import android.graphics.SweepGradient;
+import android.graphics.Xfermode;
 import android.graphics.drawable.BitmapDrawable;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -275,7 +278,7 @@ public class TestView extends View {
     private final float[] mVerts = new float[VerTexCount];
     private final float[] mTexs = new float[VerTexCount];
     private final int[] mColors = new int[VerTexCount]; // 虽然只用到一半，但要保留和顶点一样的长度，否则崩溃
-    private final short[] mIndices = { 0, 1, 2, 3, 4, 1 };
+    private final short[] mIndices = { 1, 4, 2};
 
     private Camera mCamera = new Camera();
     private Matrix mMatrix = new Matrix();
@@ -297,7 +300,7 @@ public class TestView extends View {
         setXY(mTexs, 4, 0, h);
 
         setXY(mVerts, 0, w/2, h/2);
-        setXY(mVerts, 1, 0, 0);
+        setXY(mVerts, 1, 300, 300);
         setXY(mVerts, 2, w, 0);
         setXY(mVerts, 3, w, h);
         setXY(mVerts, 4, 0, h);
@@ -340,14 +343,26 @@ public class TestView extends View {
         	mVerControl = new VerticesControl();
         	mVerControl.init(10, 10, renderRect);
         }
-        mVerControl.update(renderRect, new RectF(0, 0, w, h));
+        mVerControl.update(new RectF(0, 0, w, h));
 
         canvas.drawColor(0x00);
+//        int restoreToCount = canvas.saveLayer(null, mSavePaint, Canvas.ALL_SAVE_FLAG);
         canvas.save();
-        canvas.drawVertices(Canvas.VertexMode.TRIANGLES, mVerControl.mVerTexCount, mVerControl.mVerts, 0,
-        		mVerControl.mTexs, 0, null, 0, mVerControl.mIndices, 0, mVerControl.mIndices.length, mPaint);
+        canvas.drawVertices(Canvas.VertexMode.TRIANGLE_STRIP, mVerControl.mCacheArrayCount, mVerControl.mVerts, 0,
+        		mVerControl.mTexs, 0, mVerControl.mColors, 0, mVerControl.mIndices, 0, mVerControl.mIndicesRealCount, mPaint);
         canvas.restore();
+//        Canvas cacheCavas = this.getCacheCavas();
+//        cacheCavas.drawColor(0x00FFFFFF, PorterDuff.Mode.SRC);
+//        cacheCavas.drawVertices(Canvas.VertexMode.TRIANGLE_STRIP, mVerControl.mCacheArrayCount, mVerControl.mVerts, 0,
+//        		null, 0, mVerControl.mColors, 0, mVerControl.mIndices, 0, mVerControl.mIndicesRealCount, mPaint);
+//        mPaint.setXfermode(multiplyMode);
+//        canvas.drawBitmap(this.getCacheBitmap(), 0, 0, mPaint);
+//        mPaint.setXfermode(null);
+//        canvas.restoreToCount(restoreToCount);
 	}
+	
+	private Paint mSavePaint = new Paint();
+	private Xfermode multiplyMode = new PorterDuffXfermode(PorterDuff.Mode.MULTIPLY);
 	
 	private Bitmap cacheBitmap;
 	private Bitmap getDrawableBitmap() {
