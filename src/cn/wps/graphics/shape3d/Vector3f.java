@@ -1,4 +1,5 @@
-package org.example.localbrowser;
+package cn.wps.graphics.shape3d;
+
 
 /**
  * 3元空间向量类
@@ -7,6 +8,13 @@ public class Vector3f {
     public float x;
     public float y;
     public float z;
+    
+ // 下面信息为了缓存利用，避免碎片累积引起GC
+    protected Vector3f next;
+    private static final Object sPoolSync = new Object();
+    private static Vector3f sPool;
+    private static int sPoolSize = 0;
+    private static int sMaxPoolSize = 16;
 
     public Vector3f() {
         set(0, 0, 0);
@@ -138,5 +146,41 @@ public class Vector3f {
 
     static public float length(Vector3f p1, Vector3f p2) {
         return (float) Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y) + (p1.z - p2.z) * (p1.z - p2.z));
+    }
+    
+    public static void clearPool() {
+        synchronized(sPoolSync) {
+            while(null != sPool) {
+            	Vector3f var1 = sPool;
+                sPool = var1.next;
+                var1.next = null;
+                --sPoolSize;
+            }
+        }
+    }
+
+    public static Vector3f obtain() {
+        synchronized(sPoolSync) {
+            if(sPool != null) {
+            	Vector3f var1 = sPool;
+                sPool = var1.next;
+                var1.next = null;
+                --sPoolSize;
+                var1.set(0, 0, 0);
+                return var1;
+            }
+        }
+
+        return new Vector3f();
+    }
+
+    public void recycle() {
+        synchronized(sPoolSync) {
+            if(sPoolSize < sMaxPoolSize) {
+                this.next = sPool;
+                sPool = this;
+                ++sPoolSize;
+            }
+        }
     }
 }

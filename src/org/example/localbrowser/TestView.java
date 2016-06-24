@@ -102,7 +102,7 @@ public class TestView extends View {
 
 	public void onDraw(Canvas canvas) {
 		long startCount = System.currentTimeMillis();
-		testDrawVertices2(canvas);
+		testDrawOavl(canvas);
 		long endCount = System.currentTimeMillis();
 		long des = endCount - startCount;
 		Log.d("onDraw", "testDrawVertices time:" + des);
@@ -359,6 +359,16 @@ public class TestView extends View {
 //        canvas.drawBitmap(this.getCacheBitmap(), 0, 0, mPaint);
 //        mPaint.setXfermode(null);
 //        canvas.restoreToCount(restoreToCount);
+	}
+	
+	OavlPathModel mOavl; 
+	private void testDrawOavl(Canvas canvas) {
+		if (mOavl == null) {
+			mOavl  = new OavlPathModel(this.getResources());
+			mOavl.init(new RectF(0, 0, 300, 300));
+		}
+		canvas.drawColor(0x00);
+		mOavl.draw(canvas);
 	}
 	
 	private Paint mSavePaint = new Paint();

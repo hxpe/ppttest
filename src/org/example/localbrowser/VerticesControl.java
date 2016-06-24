@@ -1,5 +1,8 @@
 package org.example.localbrowser;
 
+import cn.wps.graphics.shape3d.GlMatrix;
+import cn.wps.graphics.shape3d.Vector3f;
+import cn.wps.graphics.shape3d.Vector4f;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.opengl.Matrix;

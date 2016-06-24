@@ -1,4 +1,4 @@
-package org.example.localbrowser;
+package cn.wps.graphics.shape3d;
 
 import android.opengl.Matrix;
 
