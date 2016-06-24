@@ -42,15 +42,25 @@ public abstract class ModelBase {
 	}
 	
 	public void draw(Canvas canvas) {
-		Bitmap textureBimatp = getTextureBitmap();
-		Shader s = new BitmapShader(textureBimatp, Shader.TileMode.CLAMP,
-                Shader.TileMode.CLAMP);
-		mPaint.setShader(s);
-		
-		canvas.save();
-        canvas.drawVertices(Canvas.VertexMode.TRIANGLES, mCacheArrayCount, mVerts, 0,
-        		mTexs, 0, mColors, 0, mIndices, 0, mIndices == null ? 0 : mIndices.length, mPaint);
-        canvas.restore();
+		drawPoints(canvas);
+//		Bitmap textureBimatp = getTextureBitmap();
+//		Shader s = new BitmapShader(textureBimatp, Shader.TileMode.CLAMP,
+//                Shader.TileMode.CLAMP);
+//		mPaint.setShader(s);
+//		
+//		canvas.save();
+//        canvas.drawVertices(Canvas.VertexMode.TRIANGLES, mCacheArrayCount, mVerts, 0,
+//        		mTexs, 0, mColors, 0, mIndices, 0, mIndices == null ? 0 : mIndices.length, mPaint);
+//        mPaint.setShader(null);
+//        canvas.restore();
+	}
+	
+	private void drawPoints(Canvas canvas) {
+		mPaint.setColor(0xffff0000);
+		for (int i = 0; i < mListVerts.size(); i++) {
+			Vector3f v = mListVerts.get(i);
+			canvas.drawPoint(v.x, v.y, mPaint);
+		}
 	}
 	
 	protected abstract Path getShapePath();

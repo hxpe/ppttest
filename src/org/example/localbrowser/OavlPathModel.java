@@ -23,7 +23,7 @@ public class OavlPathModel extends ModelBase{
 		}
 		
 		mPath = new Path();
-		mPath.addOval(mMatrixState.mAspectRatioRect, Direction.CW);
+		mPath.addOval(mMatrixState.mViewPort, Direction.CW);
 		return mPath;
 	}
 	

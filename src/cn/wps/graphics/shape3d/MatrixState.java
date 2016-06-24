@@ -6,7 +6,7 @@ import android.opengl.Matrix;
 public class MatrixState {
 	private final static float FOVY = 45f; // 透视投影视场角
 	
-	protected RectF mViewPort = new RectF();
+	public RectF mViewPort = new RectF();
     protected GlMatrix mTempMat = new GlMatrix();
     protected float mEyez = 0;
     public RectF mAspectRatioRect;
