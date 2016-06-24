@@ -29,6 +29,7 @@ public class LocalBrowser extends Activity {
    private WebView webView;
    private TextView textView;
    private Button button;
+   private TestView testView;
 
    /** Object exposed to JavaScript */
    private class AndroidBridge {
@@ -51,8 +52,8 @@ public class LocalBrowser extends Activity {
       webView = (WebView) findViewById(R.id.web_view);
       textView = (TextView) findViewById(R.id.text_view);
       button = (Button) findViewById(R.id.button);
+      testView = (TestView)findViewById(R.id.testView);
       
-      TestView testView = (TestView)findViewById(R.id.testView);
       if (testView != null) {
     	  testView.setLog(new TestView.ILog() {
 			
@@ -93,7 +94,8 @@ public class LocalBrowser extends Activity {
       button.setOnClickListener(new OnClickListener() {
          public void onClick(View view) {
             Log.d(TAG, "onClick(" + view + ")");
-            webView.loadUrl("javascript:callJS('Hello from Android')");
+            //webView.loadUrl("javascript:callJS('Hello from Android')");
+            testView.toggleAniation();
          }
       });
    }

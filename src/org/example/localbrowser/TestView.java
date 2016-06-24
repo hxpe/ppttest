@@ -348,8 +348,8 @@ public class TestView extends View {
         canvas.drawColor(0x00);
 //        int restoreToCount = canvas.saveLayer(null, mSavePaint, Canvas.ALL_SAVE_FLAG);
         canvas.save();
-        canvas.drawVertices(Canvas.VertexMode.TRIANGLE_STRIP, mVerControl.mCacheArrayCount, mVerControl.mVerts, 0,
-        		mVerControl.mTexs, 0, mVerControl.mColors, 0, mVerControl.mIndices, 0, mVerControl.mIndicesRealCount, mPaint);
+        canvas.drawVertices(Canvas.VertexMode.TRIANGLES, mVerControl.mCacheArrayCount, mVerControl.mVerts, 0,
+        		mVerControl.mTexs, 0, mVerControl.mColors, 0, mVerControl.mIndices, 0, mVerControl.mIndices.length, mPaint);
         canvas.restore();
 //        Canvas cacheCavas = this.getCacheCavas();
 //        cacheCavas.drawColor(0x00FFFFFF, PorterDuff.Mode.SRC);
@@ -382,6 +382,59 @@ public class TestView extends View {
 		mMatrix.postTranslate(0, h/2);
 		mCamera.restore();
 		return mMatrix;
+	}
+	
+	private boolean mAniming = false;
+	private boolean mStop = false;
+	public void toggleAniation() {
+		if (!mAniming) {
+			startCuzierAnimation();
+		} else {
+			mStop = true;
+		}
+	}
+	
+	private void startCuzierAnimation() {
+		Bitmap textureBimatp = getDrawableBitmap();
+		Shader s = new BitmapShader(textureBimatp, Shader.TileMode.CLAMP,
+                Shader.TileMode.CLAMP);
+		mPaint.setShader(s);
+		
+		int w = textureBimatp.getWidth();
+        int h = textureBimatp.getHeight();
+        
+        final RectF renderRect = new RectF(0, 0, w, h);
+        if (mVerControl == null) {
+        	mVerControl = new VerticesControl();
+        	mVerControl.init(10, 10, renderRect);
+        	mVerControl.update(renderRect);
+        }
+        
+        mAniming = true;
+        mStop = false;
+        this.postInvalidate();
+        this.postDelayed(new Runnable() {
+        	public void run() {
+        		mVerControl.update(renderRect);
+        		if (!mStop) {
+        			postInvalidate();
+        			postDelayed(this, 40);
+        		} else {
+        			mAniming = false;
+        		}
+        	}
+        }, 40);
+	}
+	
+	private void testDrawVertices3(Canvas canvas) {
+        if (mVerControl == null) {
+        	return;
+        }
+        canvas.drawColor(0x00);
+        canvas.save();
+        canvas.drawVertices(Canvas.VertexMode.TRIANGLES, mVerControl.mCacheArrayCount, mVerControl.mVerts, 0,
+        		mVerControl.mTexs, 0, mVerControl.mColors, 0, mVerControl.mIndices, 0, mVerControl.mIndicesRealCount, mPaint);
+        canvas.restore();
 	}
 	
 	private static void setXY(float[] array, int index, float x, float y) {

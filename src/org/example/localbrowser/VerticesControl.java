@@ -30,6 +30,10 @@ public class VerticesControl {
     
     private CubicBezier mCubicBezierPoints = new CubicBezier();
     
+    private long mStartTime = 0;
+    private long mDuration = 2000; // ms
+    private float mFraction = 0;
+    
     protected void initPerspectiveMatrix() {
     	mAspectRatioRect = getAspectRatioRect();
         // 透视投影
@@ -77,7 +81,10 @@ public class VerticesControl {
     	mVerts = new float[mCacheArrayCount];
     	mTexs = new float[mCacheArrayCount];
     	mColors = new int[mCacheArrayCount]; 
-    	mIndices = new short[meshCul * 4 * 3 * meshRow];
+    	mIndices = new short[meshCul * 2 * 3 * meshRow];
+    	
+    	mStartTime = System.currentTimeMillis();
+    	mFraction = 0;
     }
     
     private void updateMvp() {
@@ -87,6 +94,9 @@ public class VerticesControl {
     }
     
     public void update(RectF texRect) {
+    	long current = System.currentTimeMillis();
+    	this.mFraction = ((current - mStartTime) % mDuration) * 1.0f / mDuration;
+    	this.mFraction = Math.min(this.mFraction, 1.0f);
     	updateMvp();
     	updateCubic(mAspectRatioRect);
     	updateTexs(texRect);
@@ -179,7 +189,8 @@ public class VerticesControl {
             	Vector3f normal = mCubicBezierPoints.calcNormal(sx, sy);
             	lightValue.set2(sLightDiffuse).scale(Math.abs(normal.dotProduct(sLightDirection)));;
             	lightValue.add(sLightAmbient);
-            	mColors[lightIndex++] = toColor(lightValue);
+            	int color = toColor(lightValue);
+            	mColors[lightIndex++] = color;
             }
         }
     }
@@ -201,18 +212,33 @@ public class VerticesControl {
     	float hspan = Math.abs(rect.height()) / 3;
         float wspan = Math.abs(rect.width()) / 3;
         
+        float step1 = smoothStep(0, 0.25f, this.mFraction);
+        float step2 = smoothStep(0.25f, 0.5f, this.mFraction);
+        float step3 = smoothStep(0.5f, 0.75f, this.mFraction);
+        float step4 = smoothStep(0.25f, 1.0f, this.mFraction);
     	for (int row = 0; row < 4; row++) {
             for (int cur = 0; cur < 4; cur++) {
             	float x = rect.left + cur * wspan;
                 float y = rect.bottom + row * hspan;
-                float z = 0;
-                if (row == 0 && cur == 0) {
-                	z = -2f;
+                float factor = 0;
+                if (row == 0 && cur == 0 || row == 3 && cur == 3) {
+                	factor = -1.0f;
                 }
+//                else if (row == 0 && cur == 3 || row == 3 && cur == 0) {
+//                	factor = -1.0f;
+//                }
+               float z = factor;// * (-step1 + step2 + step3 -step4);
                 mCubicBezierPoints.get(row, cur).set(x, y, z);
             }
         }
     	mCubicBezierPoints.makeDirty();
+    }
+    
+ // 执行0~1之间的平滑Hermite插值
+    protected float smoothStep(float edge0, float edge1, float x) {
+        float t = (x - edge0) / (edge1 - edge0);
+        t = Math.min(Math.max(0, t), 1);
+        return t * t * (3 - 2 * t);
     }
     
     /**
