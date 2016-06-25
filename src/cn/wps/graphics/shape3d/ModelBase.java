@@ -12,7 +12,7 @@ import android.graphics.Path;
 import android.graphics.RectF;
 import android.graphics.Shader;
 
-public abstract class ModelBase {
+public abstract class ModelBase implements PathDivision.DivisionListener {
 	protected int mCacheArrayCount; // 缓存总float数
 	protected float[] mVerts;
 	protected float[] mTexs;
@@ -20,6 +20,7 @@ public abstract class ModelBase {
 	protected short[] mIndices;
     
     protected ArrayList<Vector3f> mListVerts = new ArrayList<Vector3f>();
+    protected ArrayList<Vector3f> mListNormals = new ArrayList<Vector3f>();
     protected MatrixState mMatrixState = new MatrixState();
     
     protected Paint mPaint = new Paint();
@@ -36,10 +37,22 @@ public abstract class ModelBase {
 	}
 	
 	protected void initVerts() {
+		mListVerts.clear();
+		mListNormals.clear();
 		PathDivision division = new PathDivision(this);
-		division.divisionVertexs(mListVerts);
+		division.makeVertexs();
 		division.dispose();
 	}
+	
+	public void addVertex(Vector3f v, Vector3f n) {
+		if (v == null || n == null) {
+			return;
+		}
+		mListVerts.add(v);
+		mListNormals.add(n);
+	}
+	
+	public abstract Path getShapePath();
 	
 	public void draw(Canvas canvas) {
 		drawPoints(canvas);
@@ -56,13 +69,18 @@ public abstract class ModelBase {
 	}
 	
 	private void drawPoints(Canvas canvas) {
-		mPaint.setColor(0xffff0000);
-		for (int i = 0; i < mListVerts.size(); i++) {
+		
+		mPaint.setStrokeWidth(5);
+		for (int i = 0, size = mListVerts.size(); i < size; i++) {
+			if (i == size - 1) {
+				mPaint.setColor(0xffff0000);
+			} else {
+				mPaint.setColor(0xff00ff00);
+			}
 			Vector3f v = mListVerts.get(i);
 			canvas.drawPoint(v.x, v.y, mPaint);
 		}
 	}
 	
-	protected abstract Path getShapePath();
 	protected abstract Bitmap getTextureBitmap();
 }

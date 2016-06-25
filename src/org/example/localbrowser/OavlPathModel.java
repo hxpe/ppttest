@@ -17,7 +17,7 @@ public class OavlPathModel extends ModelBase{
 	}
 	
 	@Override
-	protected Path getShapePath() {
+	public Path getShapePath() {
 		if (mPath != null) {
 			return mPath;
 		}

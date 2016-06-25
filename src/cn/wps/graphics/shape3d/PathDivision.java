@@ -2,11 +2,18 @@ package cn.wps.graphics.shape3d;
 
 import java.util.ArrayList;
 
+import org.example.localbrowser.AnyObjPool;
+
+import android.graphics.Path;
 import android.graphics.PathMeasure;
 import android.graphics.PointF;
 import android.util.Log;
 
 public class PathDivision {
+	public interface DivisionListener {
+		Path getShapePath();
+		void addVertex(Vector3f v, Vector3f n);
+	}
 	private final int MAX_POINT_COUNT = 60;
     private float posArray[] = new float[MAX_POINT_COUNT * 2];
     int pointCount = 0;
@@ -23,28 +30,31 @@ public class PathDivision {
     private int lineCount = 0;
     private int measureLength = 0;
     private PathMeasure measure;
-    private ModelBase mModel;
+    private DivisionListener mListener;
+    private boolean mAddOne = false;
     
-    private static final float SIMILAR_TAN_MAX = 0.16f;
+    private static final float SIMILAR_TAN_MAX = 0.5f;
     private float similarTanAllow = SIMILAR_TAN_MAX;
     
-	public PathDivision(ModelBase model) {
-		this.mModel = model;
+    private AnyObjPool mAnyObjPool = AnyObjPool.getPool();
+    
+	public PathDivision(DivisionListener listener) {
+		this.mListener = listener;
 		
-		this.measure = new PathMeasure(model.getShapePath(), true);
+		this.measure = new PathMeasure(mListener.getShapePath(), true);
 		this.measureLength = (int)measure.getLength();
-		startPoint = model.mAnyObjPool.getPoinF();
-        endPoint = model.mAnyObjPool.getPoinF();
+		startPoint = mAnyObjPool.getPoinF();
+        endPoint = mAnyObjPool.getPoinF();
 	}
 	
 	public void dispose() {
-		mModel.mAnyObjPool.tryReuse(startPoint);
-		mModel.mAnyObjPool.tryReuse(endPoint);
+		mAnyObjPool.tryReuse(startPoint);
+		mAnyObjPool.tryReuse(endPoint);
+		mAnyObjPool = null;
     }
 	
-	public void divisionVertexs(ArrayList<Vector3f> listVerts) {
+	public void makeVertexs() {
 		long start = System.currentTimeMillis();
-		listVerts.clear();
         for (int i = 0; i < measureLength; i++) {
             if (measure.getPosTan(i, curPos, curTan)) {
                 if (i == 0) {
@@ -70,7 +80,7 @@ public class PathDivision {
                     continue;
                 }
 
-                meetPartPath(listVerts);
+                meetPartPath();
                 pointCount = 1;
                 copyToPointArray(curPos, posArray, 0);
                 copyTan(curTan, lastTan);
@@ -83,28 +93,34 @@ public class PathDivision {
         Log.d("testShadeGrade", "testShadeGrade len " + measureLength + ",triangleCount " + triangleCount + ",lineCount " + lineCount + ",time " + (System.currentTimeMillis() - start));
 	}
 	
-	private void meetPartPath(ArrayList<Vector3f> listVerts) {
+	private void addVerts(PointF start, PointF end) {
+		if (!mAddOne) {
+        	mListener.addVertex(Vector3f.obtain().set2(start.x, start.y, 0), 
+        			Vector3f.obtain());
+        	mAddOne = true;
+		}
+        mListener.addVertex(Vector3f.obtain().set2(end.x, end.y, 0), 
+        		Vector3f.obtain());
+	}
+	
+	private void meetPartPath() {
         if (pointCount <= 1) {
             lineCount++;
         } else if (pointCount < 4) {
             startPoint.set(posArray[0], posArray[1]);
             endPoint.set(posArray[(pointCount - 1) * 2], posArray[(pointCount - 1) * 2 + 1]);
-            if (listVerts.size() == 0)
-            	listVerts.add(Vector3f.obtain().set2(startPoint.x, startPoint.y, 0));
-            listVerts.add(Vector3f.obtain().set2(endPoint.x, endPoint.y, 0));
+            addVerts(startPoint, endPoint);
             triangleCount++;
         } else {
             int mid = (int)(pointCount / 2);
             startPoint.set(posArray[0], posArray[1]);
             endPoint.set(posArray[mid * 2], posArray[mid * 2 + 1]);
-            if (listVerts.size() == 0)
-            	listVerts.add(Vector3f.obtain().set2(startPoint.x, startPoint.y, 0));
-            listVerts.add(Vector3f.obtain().set2(endPoint.x, endPoint.y, 0));
+            addVerts(startPoint, endPoint);
             triangleCount++;
 
             startPoint.set(posArray[mid * 2 ], posArray[mid * 2 + 1]);
             endPoint.set(posArray[(pointCount - 1) * 2], posArray[(pointCount - 1) * 2 + 1]);
-            listVerts.add(Vector3f.obtain().set2(endPoint.x, endPoint.y, 0));
+            addVerts(startPoint, endPoint);
             triangleCount++;
         }
     }
@@ -135,13 +151,25 @@ public class PathDivision {
         if (curTan[0] == 0 || lastTan[0] == 0)
             return false;
 
-        float difTan = curTan[1] / curTan[0] - lastTan[1] / lastTan[0];
+        float tan1 = curTan[1] / curTan[0];
+        float tan2 = lastTan[1] / lastTan[0];
+        float difTan = tan1 - tan2;
         if (Math.abs(difTan) < similarTanAllow) {
             if (pointCount > 2 && preTan != null && preTan[0] != 0) {
                 float difTan2 = Math.abs(curTan[1] / curTan[0] - preTan[1] / preTan[0]);
                 similarTanAllow -= difTan2;
             }
             return true;
+        } else if (tan1 * tan2 > 1.0f && Math.abs(tan1) > 1.0f && Math.abs(tan2) > 1.0f) {
+        	// 两点相对偏向垂直，应检查余切差异
+        	difTan = 1.0f / tan1 - 1.0f / tan2;
+        	if (Math.abs(difTan) < similarTanAllow) {
+                if (pointCount > 2 && preTan != null && preTan[1] != 0) {
+                    float difTan2 = Math.abs(1.0f / tan1 - preTan[0] / preTan[1]);
+                    similarTanAllow -= difTan2;
+                }
+                return true;
+            }
         }
 
         return false;
