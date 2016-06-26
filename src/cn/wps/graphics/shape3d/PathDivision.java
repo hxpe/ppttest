@@ -1,12 +1,7 @@
 package cn.wps.graphics.shape3d;
 
-import java.util.ArrayList;
-
-import org.example.localbrowser.AnyObjPool;
-
 import android.graphics.Path;
 import android.graphics.PathMeasure;
-import android.graphics.PointF;
 import android.util.Log;
 
 public class PathDivision {
@@ -14,8 +9,7 @@ public class PathDivision {
 		Path getShapePath();
 		void addVertex(Vector3f v, Vector3f n);
 	}
-	private final int MAX_POINT_COUNT = 60;
-    private float posArray[] = new float[MAX_POINT_COUNT * 2];
+    int similarTanStart = -1; 
     int pointCount = 0;
 
     private float firstPos[] = new float[2];
@@ -24,8 +18,6 @@ public class PathDivision {
     private float curTan[] = new float[2];
     private float lastTan[] = new float[2];
     private float preTan[] = new float[2];
-    private PointF startPoint;
-    private PointF endPoint;
     private int triangleCount = 0;
     private int lineCount = 0;
     private int measureLength = 0;
@@ -36,21 +28,14 @@ public class PathDivision {
     private static final float SIMILAR_TAN_MAX = 0.5f;
     private float similarTanAllow = SIMILAR_TAN_MAX;
     
-    private AnyObjPool mAnyObjPool = AnyObjPool.getPool();
-    
 	public PathDivision(DivisionListener listener) {
 		this.mListener = listener;
 		
 		this.measure = new PathMeasure(mListener.getShapePath(), true);
 		this.measureLength = (int)measure.getLength();
-		startPoint = mAnyObjPool.getPoinF();
-        endPoint = mAnyObjPool.getPoinF();
 	}
 	
 	public void dispose() {
-		mAnyObjPool.tryReuse(startPoint);
-		mAnyObjPool.tryReuse(endPoint);
-		mAnyObjPool = null;
     }
 	
 	public void makeVertexs() {
@@ -58,34 +43,33 @@ public class PathDivision {
         for (int i = 0; i < measureLength; i++) {
             if (measure.getPosTan(i, curPos, curTan)) {
                 if (i == 0) {
-                    copyTan(curTan, lastTan);
-                    copyTan(curTan, preTan);
-                    copyPoint(curPos, lastPos);
-                    copyPoint(curPos, firstPos);
-                    copyToPointArray(curPos, posArray, pointCount);
-                    pointCount++;
+                	System.arraycopy(curTan, 0, lastTan, 0, 2);
+                	System.arraycopy(curTan, 0, preTan, 0, 2);
+                	System.arraycopy(curPos, 0, lastPos, 0, 2);
+                	System.arraycopy(curPos, 0, firstPos, 0, 2);
+                    similarTanStart = 0;
+                    pointCount = 1;
                     continue;
                 }
 
                 // 强制Path闭合进行处理
                 if (i == measureLength - 1) {
-                    copyPoint(firstPos, curPos);
+                	System.arraycopy(firstPos, 0, curPos, 0, 2);
                 }
 
-                copyToPointArray(curPos, posArray, pointCount);
                 pointCount++;
 
-                if (isSimilarTan(curTan, lastTan, preTan) && i < measureLength - 1 && pointCount < MAX_POINT_COUNT) {
-                    copyTan(curTan, preTan);
+                if (isSimilarTan(curTan, lastTan, preTan) && i < measureLength - 1) {
+                	System.arraycopy(curTan, 0, preTan, 0, 2);
                     continue;
                 }
 
                 meetPartPath();
+                similarTanStart = i;
                 pointCount = 1;
-                copyToPointArray(curPos, posArray, 0);
-                copyTan(curTan, lastTan);
-                copyTan(curTan, preTan);
-                copyPoint(curPos, lastPos);
+                System.arraycopy(curTan, 0, lastTan, 0, 2);
+                System.arraycopy(curTan, 0, preTan, 0, 2);
+                System.arraycopy(curPos, 0, lastPos, 0, 2);
                 similarTanAllow  = SIMILAR_TAN_MAX;
             }
         }
@@ -93,55 +77,43 @@ public class PathDivision {
         Log.d("testShadeGrade", "testShadeGrade len " + measureLength + ",triangleCount " + triangleCount + ",lineCount " + lineCount + ",time " + (System.currentTimeMillis() - start));
 	}
 	
-	private void addVerts(PointF start, PointF end) {
+	private float tempPos[] = new float[2];
+    private float tempTan[] = new float[2];
+    private Vector3f ZInerVer = new Vector3f(0, 0, 1); // 从z方向向里面的单位向量
+	private void addVerts(int start, int end) {
 		if (!mAddOne) {
-        	mListener.addVertex(Vector3f.obtain().set2(start.x, start.y, 0), 
-        			Vector3f.obtain());
-        	mAddOne = true;
+			if (measure.getPosTan(start, tempPos, tempTan)) {
+				Vector3f v = Vector3f.obtain().set2(tempPos[0], tempPos[1], 0);
+				Vector3f n = Vector3f.obtain().set2(tempTan[0], tempTan[1], 0); 
+				n.crossProduct2(ZInerVer).normalize();
+				mListener.addVertex(v, n);
+	        	mAddOne = true;
+			}
 		}
-        mListener.addVertex(Vector3f.obtain().set2(end.x, end.y, 0), 
-        		Vector3f.obtain());
+		if (measure.getPosTan(end, tempPos, tempTan)) {
+			Vector3f v = Vector3f.obtain().set2(tempPos[0], tempPos[1], 0);
+			Vector3f n = Vector3f.obtain().set2(tempTan[0], tempTan[1], 0); 
+			n.crossProduct2(ZInerVer).normalize();
+			mListener.addVertex(v, n);
+		}
 	}
 	
 	private void meetPartPath() {
         if (pointCount <= 1) {
             lineCount++;
         } else if (pointCount < 4) {
-            startPoint.set(posArray[0], posArray[1]);
-            endPoint.set(posArray[(pointCount - 1) * 2], posArray[(pointCount - 1) * 2 + 1]);
-            addVerts(startPoint, endPoint);
+            addVerts(similarTanStart, similarTanStart + pointCount - 1);
             triangleCount++;
         } else {
             int mid = (int)(pointCount / 2);
-            startPoint.set(posArray[0], posArray[1]);
-            endPoint.set(posArray[mid * 2], posArray[mid * 2 + 1]);
-            addVerts(startPoint, endPoint);
+            addVerts(similarTanStart, similarTanStart + mid - 1);
             triangleCount++;
 
-            startPoint.set(posArray[mid * 2 ], posArray[mid * 2 + 1]);
-            endPoint.set(posArray[(pointCount - 1) * 2], posArray[(pointCount - 1) * 2 + 1]);
-            addVerts(startPoint, endPoint);
+            addVerts(similarTanStart + mid - 1, pointCount - 1);
             triangleCount++;
         }
     }
 	
-	private void copyPoint(float[] point1, float[] point2) {
-        point2[0] = point1[0];
-        point2[1] = point1[1];
-    }
-
-    private void copyTan(float[] tan1, float[] tan2) {
-        tan2[0] = tan1[0];
-        tan2[1] = tan1[1];
-    }
-
-    private void copyToPointArray(float[] point1, float[] pointArray, int index) {
-        if (index * 2 + 1 < pointArray.length) {
-            pointArray[index * 2] = point1[0];
-            pointArray[index * 2 + 1] = point1[1];
-        }
-    }
-
     private boolean isSimilarTan(float[] curTan, float[] lastTan, float[] preTan) {
         if (curTan[0] == 0 && lastTan[0] == 0 ||
                 curTan[1] == 0 && lastTan[1] == 0) {

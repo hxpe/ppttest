@@ -71,6 +71,13 @@ public class GlMatrix {
             Matrix.transposeM(dest.m, 0, sTemp, 0);
         }
     }
+    
+    public void invertAndTranspose() {
+        synchronized(sTemp) {
+            Matrix.invertM(sTemp, 0, m, 0);
+            Matrix.transposeM(m, 0, sTemp, 0);
+        }
+    }
 
     public void invert() {
         synchronized(sTemp) {

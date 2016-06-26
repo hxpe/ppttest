@@ -17,7 +17,7 @@ public class Vector3f {
     private static int sMaxPoolSize = 16;
 
     public Vector3f() {
-        set(0, 0, 0);
+    	zero();
     }
 
     public Vector3f(float x, float y, float z) {
@@ -26,6 +26,18 @@ public class Vector3f {
 
     public Vector3f(Vector3f v) {
         set(v);
+    }
+    
+    public void zero() {
+    	set(0, 0, 0);
+    }
+    
+    public boolean isZero() {
+    	return x == 0 && y == 0 && z == 0;
+    }
+    
+    public boolean notZero() {
+    	return x != 0 || y != 0 || z != 0;
     }
 
     static public Vector3f[] createArray(int size) {
@@ -78,6 +90,10 @@ public class Vector3f {
         this.x -= v.x;
         this.y -= v.y;
         this.z -= v.z;
+    }
+    
+    public void subZ(float z){
+        this.z -= z;
     }
 
     public Vector3f sub2(Vector3f v){
