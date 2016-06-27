@@ -11,6 +11,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
 import android.graphics.Shader;
+import android.graphics.Paint.Style;
 
 public abstract class ModelBase implements PathDivision.DivisionListener {
     protected ArrayList<Vector3f> mListVerts = new ArrayList<Vector3f>();
@@ -35,7 +36,7 @@ public abstract class ModelBase implements PathDivision.DivisionListener {
 	protected void initVerts() {
 		mListVerts.clear();
 		mListNormals.clear();
-		PathDivision division = new PathDivision(this);
+		PathDivision division = new PathDivision(this, true);
 		division.makeVertexs();
 		division.dispose();
 		mMatrixState.updateMatrix();
@@ -53,6 +54,7 @@ public abstract class ModelBase implements PathDivision.DivisionListener {
 	public abstract Path getShapePath();
 	
 	public void draw(Canvas canvas) {
+		drawFrame(canvas);
 		mCache2d.draw(canvas);
 //        if (sDebug) {
 //        	drawPoints(canvas);
@@ -74,6 +76,13 @@ public abstract class ModelBase implements PathDivision.DivisionListener {
 //			canvas.drawLine(v.x, v.y, v.x + temp3f.x, v.y + temp3f.y, testPaint);
 			canvas.drawPoint(v.x, v.y, testPaint);
 		}
+	}
+	
+	private void drawFrame(Canvas canvas) {
+		testPaint.setStyle(Style.STROKE);
+		testPaint.setStrokeWidth(2);
+		testPaint.setColor(0xFF0000ff);
+		canvas.drawRect(mMatrixState.mViewPort, testPaint);
 	}
 	
 	protected abstract Bitmap getTextureBitmap();

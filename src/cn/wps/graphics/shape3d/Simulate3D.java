@@ -7,6 +7,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Shader;
+import android.util.Log;
 
 public class Simulate3D {
 	protected int mCacheArrayCount; // 缓存总float数
@@ -35,7 +36,9 @@ public class Simulate3D {
 	}
 	
 	private void update2DMesh() {
-        int vertCount = 0;
+		long start = System.currentTimeMillis();
+		
+		int vertCount = 0;
         int colorCount = 0;
         mIndicesRealCount = 0;
         Vector3f lastFront = new Vector3f();
@@ -73,6 +76,8 @@ public class Simulate3D {
         	lastFront.set(front);
         	lastBottom.set(bottom);
         }
+        
+        Log.d("Simulate3D", "update2DMesh " + (System.currentTimeMillis() - start));
     }
 	
 	// 根据三角形按照逆转计算朝向
@@ -117,16 +122,16 @@ public class Simulate3D {
 		
 		canvas.save();
         canvas.drawVertices(Canvas.VertexMode.TRIANGLES, mCacheArrayCount, mVerts, 0,
-        		mTexs, 0, mColors, 0, mIndices, 23, 3, mPaint);
+        		mTexs, 0, mColors, 0, mIndices, 0, mIndicesRealCount, mPaint);
         mPaint.setShader(null);
         canvas.restore();
         
-        drawPoints(canvas);
+        drawEdge(canvas);
 	}
 	
 	private Paint testPaint = new Paint();
-	private void drawPoints(Canvas canvas) {
-		testPaint.setStrokeWidth(5);
+	private void drawMesh(Canvas canvas) {
+		testPaint.setStrokeWidth(1);
 		for (int i = 0, size = mVerts.length / 4; i < size; i++) {
 			if (i == size - 1) {
 				testPaint.setColor(0xffff0000);
@@ -135,6 +140,24 @@ public class Simulate3D {
 			}
 			canvas.drawLine(mVerts[i * 4], mVerts[i * 4 + 1], 
 					mVerts[i * 4 + 2], mVerts[i * 4 + 3], testPaint);
+			if (i > 0) {
+				canvas.drawLine(mVerts[i * 4 - 2], mVerts[i * 4 - 1], 
+						mVerts[i * 4], mVerts[i * 4 + 1], testPaint);
+			}
+		}
+	}
+	
+	private void drawEdge(Canvas canvas) {
+		testPaint.setStrokeWidth(1);
+		testPaint.setColor(0xff0000ff);
+		for (int i = 0, size = mVerts.length / 4 - 1; i < size; i++) {
+			canvas.drawLine(mVerts[(i) * 4], mVerts[i * 4 + 1], 
+					mVerts[(i + 1) * 4], mVerts[(i + 1) * 4 + 1], testPaint);
+		}
+		testPaint.setColor(0xff00ff00);
+		for (int i = 0, size = mVerts.length / 4 - 1; i < size; i++) {
+			canvas.drawLine(mVerts[(i) * 4 + 2], mVerts[i * 4 + 3], 
+					mVerts[(i + 1) * 4 + 2], mVerts[(i + 1) * 4 + 3], testPaint);
 		}
 	}
 }

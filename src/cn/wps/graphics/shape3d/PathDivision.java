@@ -9,8 +9,9 @@ public class PathDivision {
 		Path getShapePath();
 		void addVertex(Vector3f v, Vector3f n);
 	}
-    int similarTanStart = -1; 
-    int pointCount = 0;
+	private boolean forceClosed = false;
+	private int similarTanStart = -1; 
+	private int pointCount = 0;
 
     private float firstPos[] = new float[2];
     private float curPos[] = new float[2];
@@ -23,15 +24,19 @@ public class PathDivision {
     private int measureLength = 0;
     private PathMeasure measure;
     private DivisionListener mListener;
-    private boolean mAddOne = false;
     
-    private static final float SIMILAR_TAN_MAX = 0.5f;
+    private boolean mAddOne = false;
+    private Vector3f mFirstPos;
+    private Vector3f mFirstNormal;
+    
+    private static final float SIMILAR_TAN_MAX = 0.38f;
     private float similarTanAllow = SIMILAR_TAN_MAX;
     
-	public PathDivision(DivisionListener listener) {
+	public PathDivision(DivisionListener listener, boolean forceClosed) {
 		this.mListener = listener;
+		this.forceClosed = forceClosed;
 		
-		this.measure = new PathMeasure(mListener.getShapePath(), true);
+		this.measure = new PathMeasure(mListener.getShapePath(), forceClosed);
 		this.measureLength = (int)measure.getLength();
 	}
 	
@@ -52,11 +57,6 @@ public class PathDivision {
                     continue;
                 }
 
-                // 强制Path闭合进行处理
-                if (i == measureLength - 1) {
-                	System.arraycopy(firstPos, 0, curPos, 0, 2);
-                }
-
                 pointCount++;
 
                 if (isSimilarTan(curTan, lastTan, preTan) && i < measureLength - 1) {
@@ -73,8 +73,13 @@ public class PathDivision {
                 similarTanAllow  = SIMILAR_TAN_MAX;
             }
         }
+        
+        // 强制Path闭合进行处理
+        if (forceClosed && mFirstPos != null && mFirstNormal != null) {
+        	mListener.addVertex(mFirstPos, mFirstNormal);
+        }
 
-        Log.d("testShadeGrade", "testShadeGrade len " + measureLength + ",triangleCount " + triangleCount + ",lineCount " + lineCount + ",time " + (System.currentTimeMillis() - start));
+        Log.d("Simulate3D", "makeVertexs " + measureLength + ",triangleCount " + triangleCount + ",lineCount " + lineCount + ",time " + (System.currentTimeMillis() - start));
 	}
 	
 	private float tempPos[] = new float[2];
@@ -88,6 +93,8 @@ public class PathDivision {
 				n.crossProduct2(ZInerVer).normalize();
 				mListener.addVertex(v, n);
 	        	mAddOne = true;
+	        	mFirstPos = v;
+	        	mFirstNormal = n;
 			}
 		}
 		if (measure.getPosTan(end, tempPos, tempTan)) {
@@ -109,7 +116,7 @@ public class PathDivision {
             addVerts(similarTanStart, similarTanStart + mid - 1);
             triangleCount++;
 
-            addVerts(similarTanStart + mid - 1, pointCount - 1);
+            addVerts(similarTanStart + mid - 1, similarTanStart + pointCount - 1);
             triangleCount++;
         }
     }

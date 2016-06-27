@@ -18,11 +18,15 @@ public class MatrixState {
     protected GlMatrix mMatNormal = new GlMatrix();
     
     protected float mOneLength;
+    protected float mHalfX;
+    protected float mHalfY;
     protected float mCenterX;
     protected float mCenterY;
     
     public void init(RectF viewPort) {
     	mViewPort.set(viewPort);
+    	mHalfX = mViewPort.width() / 2;
+    	mHalfY = mViewPort.height() / 2;
     	mCenterX = mViewPort.centerX();
     	mCenterY = mViewPort.centerY();
     	initPerspectiveMatrix();
@@ -31,7 +35,8 @@ public class MatrixState {
     protected void initPerspectiveMatrix() {
     	mAspectRatioRect = getAspectRatioRect();
         // 透视投影
-    	mMatPerspective.setPerspective(FOVY, Math.abs(mAspectRatioRect.width()) / Math.abs(mAspectRatioRect.height()), 0.001f, 10f);
+    	float aspect = Math.abs(mAspectRatioRect.width()) / Math.abs(mAspectRatioRect.height());
+    	mMatPerspective.setPerspective(FOVY, aspect, 0, 10f);
 
         // 摄像机参数调整
         mTempMat.reset();
@@ -71,8 +76,8 @@ public class MatrixState {
 		}
     	
     	// 到视口的变换
-    	dest.x = mCenterX + mOneLength * dest.x;
-    	dest.y = mCenterY + mOneLength * dest.y;
+    	dest.x = mCenterX + mHalfX * dest.x;
+    	dest.y = mCenterY + mHalfY * dest.y;
     	dest.z = mOneLength * dest.z;
     }
     
