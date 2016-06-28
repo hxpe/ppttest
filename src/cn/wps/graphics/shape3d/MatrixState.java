@@ -4,7 +4,7 @@ import android.graphics.RectF;
 import android.opengl.Matrix;
 
 public class MatrixState {
-	private final static float FOVY = 45f; // 透视投影视场角
+	private final static float FOVY = 22.5f; // 透视投影视场角
 	
 	public RectF mViewPort = new RectF();
     protected GlMatrix mTempMat = new GlMatrix();
@@ -36,13 +36,12 @@ public class MatrixState {
     	mAspectRatioRect = getAspectRatioRect();
         // 透视投影
     	float aspect = Math.abs(mAspectRatioRect.width()) / Math.abs(mAspectRatioRect.height());
-    	mMatPerspective.setPerspective(FOVY, aspect, 0, 10f);
+    	mEyez = (float) (mAspectRatioRect.top / Math.tan(Math.toRadians(FOVY / 2)));
+    	mMatPerspective.setPerspective(FOVY, aspect, mEyez, 10f);
 
         // 摄像机参数调整
         mTempMat.reset();
-        mEyez = (float) (mAspectRatioRect.top / Math.tan(Math.toRadians(FOVY / 2)));
         mTempMat.setLookAt(0, 0, mEyez, 0, 0, 0, 0, 1f, 0);
-
         mMatPerspective.preConcat(mTempMat);
     }
     
@@ -78,7 +77,6 @@ public class MatrixState {
     	// 到视口的变换
     	dest.x = mCenterX + mHalfX * dest.x;
     	dest.y = mCenterY + mHalfY * dest.y;
-    	dest.z = mOneLength * dest.z;
     }
     
     public void mapVert(Vector3f src) {

@@ -54,11 +54,10 @@ public abstract class ModelBase implements PathDivision.DivisionListener {
 	public abstract Path getShapePath();
 	
 	public void draw(Canvas canvas) {
-		drawFrame(canvas);
 		mCache2d.draw(canvas);
-//        if (sDebug) {
-//        	drawPoints(canvas);
-//        }
+        if (sDebug) {
+        	drawFrame(canvas);
+        }
 	}
 	
 	private Vector3f temp3f = new Vector3f();
@@ -83,6 +82,8 @@ public abstract class ModelBase implements PathDivision.DivisionListener {
 		testPaint.setStrokeWidth(2);
 		testPaint.setColor(0xFF0000ff);
 		canvas.drawRect(mMatrixState.mViewPort, testPaint);
+		canvas.drawLine(mMatrixState.mViewPort.centerX(), mMatrixState.mViewPort.top, 
+				mMatrixState.mViewPort.centerX(), mMatrixState.mViewPort.bottom, testPaint);
 	}
 	
 	protected abstract Bitmap getTextureBitmap();
