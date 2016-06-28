@@ -365,7 +365,7 @@ public class TestView extends View {
 	private void testDrawOavl(Canvas canvas) {
 		if (mOavl == null) {
 			mOavl  = new OavlPathModel(this.getResources());
-			mOavl.init(new RectF(0, 0, 1000, 500));
+			mOavl.init(new RectF(0, 0, 1000, 1000));
 		}
 		canvas.drawColor(0xffffffff);
 		mOavl.draw(canvas);

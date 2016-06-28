@@ -8,6 +8,7 @@ public class PathDivision {
 	public interface DivisionListener {
 		Path getShapePath();
 		void addVertex(Vector3f v, Vector3f n);
+		void forceClosed();
 	}
 	private boolean forceClosed = false;
 	private int similarTanStart = -1; 
@@ -26,9 +27,6 @@ public class PathDivision {
     private DivisionListener mListener;
     
     private boolean mAddOne = false;
-    private Vector3f mFirstPos;
-    private Vector3f mFirstNormal;
-    
     private static final float SIMILAR_TAN_MAX = 0.38f;
     private float similarTanAllow = SIMILAR_TAN_MAX;
     
@@ -75,8 +73,8 @@ public class PathDivision {
         }
         
         // 强制Path闭合进行处理
-        if (forceClosed && mFirstPos != null && mFirstNormal != null) {
-        	mListener.addVertex(mFirstPos, mFirstNormal);
+        if (forceClosed) {
+        	mListener.forceClosed();
         }
 
         Log.d("Simulate3D", "makeVertexs " + measureLength + ",triangleCount " + triangleCount + ",lineCount " + lineCount + ",time " + (System.currentTimeMillis() - start));
@@ -93,8 +91,6 @@ public class PathDivision {
 				n.crossProduct2(ZInerVer).normalize();
 				mListener.addVertex(v, n);
 	        	mAddOne = true;
-	        	mFirstPos = v;
-	        	mFirstNormal = n;
 			}
 		}
 		if (measure.getPosTan(end, tempPos, tempTan)) {

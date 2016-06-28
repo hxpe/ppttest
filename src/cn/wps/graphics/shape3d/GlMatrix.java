@@ -92,6 +92,7 @@ public class GlMatrix {
 
     public void setFrustum(float left, float right, float bottom, float top, float near, float far) {
         Matrix.frustumM(m, 0, left, right, bottom, top, near, far);
+        m[8] /= 2.0f ; // bug,see http://code.google.com/p/android/issues/detail?id=35646
     }
     public void setPerspective(float angleInDegree, float aspect, float near, float far){
         Matrix.perspectiveM(m, 0, angleInDegree, aspect, near, far);

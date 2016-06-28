@@ -19,18 +19,22 @@ public abstract class ModelBase implements PathDivision.DivisionListener {
     protected MatrixState mMatrixState = new MatrixState();
     
     protected AnyObjPool mAnyObjPool = AnyObjPool.getPool();
-    public static boolean sDebug = true;
     
     protected Object3D mObject3d = new Object3D();
-    private Simulate3D mCache2d;
+    protected Shader2DImpl mShader2d;
+    
+    public Debugger mDebugger;
     
 	public ModelBase() {
-		mCache2d = new Simulate3D(this);
+		mShader2d = new Shader2DImpl(this);
+		mDebugger = new Debugger(this);
 	}
 	
 	public void init(RectF viewPort) {
 		mMatrixState.init(viewPort);
+		mMatrixState.updateMatrix();
 		initVerts();
+		mShader2d.init();
 	}
 	
 	protected void initVerts() {
@@ -39,9 +43,14 @@ public abstract class ModelBase implements PathDivision.DivisionListener {
 		PathDivision division = new PathDivision(this, true);
 		division.makeVertexs();
 		division.dispose();
-		mMatrixState.updateMatrix();
-		mCache2d.init();
 	}
+	
+	public void draw(Canvas canvas) {
+		mShader2d.draw(canvas);
+        mDebugger.drawFrame(canvas);
+	}
+	
+	public abstract Path getShapePath();
 	
 	public void addVertex(Vector3f v, Vector3f n) {
 		if (v == null || n == null) {
@@ -51,39 +60,13 @@ public abstract class ModelBase implements PathDivision.DivisionListener {
 		mListNormals.add(n);
 	}
 	
-	public abstract Path getShapePath();
-	
-	public void draw(Canvas canvas) {
-		mCache2d.draw(canvas);
-        if (sDebug) {
-        	drawFrame(canvas);
-        }
-	}
-	
-	private Vector3f temp3f = new Vector3f();
-	private Paint testPaint = new Paint();
-	private void drawPoints(Canvas canvas) {
-		testPaint.setStrokeWidth(5);
-		for (int i = 0, size = mListVerts.size(); i < size; i++) {
-			if (i == size - 1) {
-				testPaint.setColor(0xffff0000);
-			} else {
-				testPaint.setColor(0xff00ff00);
-			}
-			Vector3f v = mListVerts.get(i);
-//			temp3f.set2(mListNormals.get(i)).scale(100);
-//			canvas.drawLine(v.x, v.y, v.x + temp3f.x, v.y + temp3f.y, testPaint);
-			canvas.drawPoint(v.x, v.y, testPaint);
+	public void forceClosed() {
+		int size = mListVerts.size();
+		if (size > 0) {
+			// 最后一个代替用第一个形成闭合
+			mListVerts.get(size - 1).set2(mListVerts.get(0));
+			mListNormals.get(size - 1).set2(mListNormals.get(0));
 		}
-	}
-	
-	private void drawFrame(Canvas canvas) {
-		testPaint.setStyle(Style.STROKE);
-		testPaint.setStrokeWidth(2);
-		testPaint.setColor(0xFF0000ff);
-		canvas.drawRect(mMatrixState.mViewPort, testPaint);
-		canvas.drawLine(mMatrixState.mViewPort.centerX(), mMatrixState.mViewPort.top, 
-				mMatrixState.mViewPort.centerX(), mMatrixState.mViewPort.bottom, testPaint);
 	}
 	
 	protected abstract Bitmap getTextureBitmap();

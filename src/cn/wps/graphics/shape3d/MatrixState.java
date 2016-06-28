@@ -6,14 +6,15 @@ import android.opengl.Matrix;
 public class MatrixState {
 	private final static float FOVY = 22.5f; // 透视投影视场角
 	
-	public RectF mViewPort = new RectF();
+	private RectF mViewPort = new RectF();
     protected GlMatrix mTempMat = new GlMatrix();
     protected float mEyez = 0;
-    public RectF mAspectRatioRect;
+    public RectF mRenderRect;
     
     protected GlMatrix mMatPerspective = new GlMatrix();
     protected GlMatrix mMatModel = new GlMatrix();
     protected GlMatrix mMatView = new GlMatrix();
+    protected GlMatrix mMatTransform = new GlMatrix();
     protected GlMatrix mMatMVP = new GlMatrix();
     protected GlMatrix mMatNormal = new GlMatrix();
     
@@ -29,15 +30,19 @@ public class MatrixState {
     	mHalfY = mViewPort.height() / 2;
     	mCenterX = mViewPort.centerX();
     	mCenterY = mViewPort.centerY();
+    	mRenderRect = new RectF(-mHalfX, mHalfY, mHalfX, -mHalfY);
     	initPerspectiveMatrix();
     }
     
+    public RectF getViewPort() {
+    	return this.mViewPort;
+    }
+    
     protected void initPerspectiveMatrix() {
-    	mAspectRatioRect = getAspectRatioRect();
         // 透视投影
-    	float aspect = Math.abs(mAspectRatioRect.width()) / Math.abs(mAspectRatioRect.height());
-    	mEyez = (float) (mAspectRatioRect.top / Math.tan(Math.toRadians(FOVY / 2)));
-    	mMatPerspective.setPerspective(FOVY, aspect, mEyez, 10f);
+    	mEyez = (float) (mRenderRect.top / Math.tan(Math.toRadians(FOVY / 2)));
+    	mMatPerspective.setFrustum(mRenderRect.left, mRenderRect.right, 
+    			mRenderRect.bottom, mRenderRect.top, mEyez, 10f);
 
         // 摄像机参数调整
         mTempMat.reset();
@@ -45,7 +50,7 @@ public class MatrixState {
         mMatPerspective.preConcat(mTempMat);
     }
     
-    protected RectF getAspectRatioRect() {
+    protected RectF getRenderRect() {
         float ratioX = 1.0f;
         float ratioY = 1.0f;
         if (mViewPort.width() > mViewPort.height()) {
@@ -60,11 +65,11 @@ public class MatrixState {
     }
     
     private float[] mPointCache = new float[] {0, 0, 0, 1};
-    public void mapVert(Vector3f src, Vector3f dest) {
+    public void projectionMap(Vector3f src, Vector3f dest) {
     	synchronized (mPointCache) {
-    		mPointCache[0] = (src.x - mCenterX) / mOneLength;
-        	mPointCache[1] = (src.y - mCenterY) / mOneLength;
-        	mPointCache[2] = src.z / mOneLength;
+    		mPointCache[0] = (src.x - mCenterX);
+        	mPointCache[1] = (src.y - mCenterY);
+        	mPointCache[2] = src.z;
         	mPointCache[3] = 1;
         	// MVP转换
         	Matrix.multiplyMV(mPointCache, 0, mMatMVP.getValues(), 0, mPointCache, 0);
@@ -79,11 +84,7 @@ public class MatrixState {
     	dest.y = mCenterY + mHalfY * dest.y;
     }
     
-    public void mapVert(Vector3f src) {
-    	mapVert(src, src);
-    }
-    
-    public void mapNormal(Vector3f src, Vector3f dest) {
+    public void normalMap(Vector3f src, Vector3f dest) {
     	synchronized (mPointCache) {
     		mPointCache[0] = src.x;
         	mPointCache[1] = src.y;
@@ -96,8 +97,17 @@ public class MatrixState {
 		}
     }
     
-    public void mapNormal(Vector3f src) {
-    	mapNormal(src, src);
+    public void transformMap(Vector3f src, Vector3f dest) {
+    	synchronized (mPointCache) {
+    		mPointCache[0] = src.x;
+        	mPointCache[1] = src.y;
+        	mPointCache[2] = src.z;
+        	mPointCache[3] = 1;
+        	Matrix.multiplyMV(mPointCache, 0, mMatTransform.getValues(), 0, mPointCache, 0);
+        	dest.x = mPointCache[0];
+        	dest.y = mPointCache[1];
+        	dest.z = mPointCache[2];
+		}
     }
     
     public void updateMatrix() {
@@ -105,12 +115,13 @@ public class MatrixState {
     	mMatModel.reset();
     	mMatModel.rotate3d(-45, 0, 1, 0);
     	
-    	mMatMVP.setMatrix(mMatPerspective);
-    	mMatMVP.preConcat(mMatView);
-    	mMatMVP.preConcat(mMatModel);
+    	mMatTransform.setMatrix(mMatView);
+    	mMatTransform.preConcat(mMatModel);
     	
-    	mMatNormal.setMatrix(mMatView);
-    	mMatNormal.preConcat(mMatModel);
+    	mMatMVP.setMatrix(mMatPerspective);
+    	mMatMVP.preConcat(mMatTransform);
+    	
+    	mMatNormal.setMatrix(mMatTransform);
     	mMatNormal.invertAndTranspose();
     }
 }
