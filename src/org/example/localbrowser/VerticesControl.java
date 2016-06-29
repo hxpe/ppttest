@@ -82,7 +82,7 @@ public class VerticesControl {
     	initPerspectiveMatrix();
     	
     	mVerts = new float[mCacheArrayCount];
-    	mTexs = new float[mCacheArrayCount];
+    	mTexs = new float[mCacheArrayCount]; 
     	mColors = new int[mCacheArrayCount]; 
     	mIndices = new short[meshCul * 2 * 3 * meshRow];
     	

@@ -18,7 +18,6 @@ public class MatrixState {
     protected GlMatrix mMatMVP = new GlMatrix();
     protected GlMatrix mMatNormal = new GlMatrix();
     
-    protected float mOneLength;
     protected float mHalfX;
     protected float mHalfY;
     protected float mCenterX;
@@ -34,8 +33,16 @@ public class MatrixState {
     	initPerspectiveMatrix();
     }
     
+    public void dispose() {
+    	
+    }
+    
     public RectF getViewPort() {
     	return this.mViewPort;
+    }
+    
+    public GlMatrix modelMatrix() {
+    	return mMatModel;
     }
     
     protected void initPerspectiveMatrix() {
@@ -48,20 +55,6 @@ public class MatrixState {
         mTempMat.reset();
         mTempMat.setLookAt(0, 0, mEyez, 0, 0, 0, 0, 1f, 0);
         mMatPerspective.preConcat(mTempMat);
-    }
-    
-    protected RectF getRenderRect() {
-        float ratioX = 1.0f;
-        float ratioY = 1.0f;
-        if (mViewPort.width() > mViewPort.height()) {
-            ratioX = 1.0f * mViewPort.width() / mViewPort.height();
-            mOneLength = mViewPort.height() / 2;
-        } else {
-            ratioY = 1.0f * mViewPort.height() / mViewPort.width();
-            mOneLength = mViewPort.width() / 2;
-        }
-
-        return new RectF(-ratioX, ratioY, ratioX, -ratioY);
     }
     
     private float[] mPointCache = new float[] {0, 0, 0, 1};
@@ -111,10 +104,6 @@ public class MatrixState {
     }
     
     public void updateMatrix() {
-    	// test
-    	mMatModel.reset();
-    	mMatModel.rotate3d(-45, 0, 1, 0);
-    	
     	mMatTransform.setMatrix(mMatView);
     	mMatTransform.preConcat(mMatModel);
     	

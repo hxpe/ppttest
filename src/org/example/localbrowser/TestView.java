@@ -8,6 +8,10 @@ import org.example.localbrowser.pathgradfill.PathGradFillBase;
 import org.example.localbrowser.pathgradfill.RectGradFill;
 import org.example.localbrowser.pathgradfill.ShapeGradFill;
 
+import cn.wps.graphics.shape3d.ModelBase;
+import cn.wps.graphics.shape3d.OavlPathModel;
+import cn.wps.graphics.shape3d.Object3D;
+import cn.wps.graphics.shape3d.PolygonPathModel;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
@@ -37,6 +41,7 @@ import android.graphics.Shader.TileMode;
 import android.graphics.SweepGradient;
 import android.graphics.Xfermode;
 import android.graphics.drawable.BitmapDrawable;
+import android.nfc.NfcAdapter.CreateNdefMessageCallback;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -361,12 +366,15 @@ public class TestView extends View {
 //        canvas.restoreToCount(restoreToCount);
 	}
 	
-	OavlPathModel mOavl; 
-	private void testDrawOavl(Canvas canvas) {
+	ModelBase mOavl; 
+	private void create3DModel() {
 		if (mOavl == null) {
-			mOavl  = new OavlPathModel(this.getResources());
+			mOavl  = new PolygonPathModel(this.getResources(), new Object3D());
 			mOavl.init(new RectF(0, 0, 1000, 1000));
 		}
+	}
+	private void testDrawOavl(Canvas canvas) {
+		create3DModel();
 		canvas.drawColor(0xffffffff);
 		mOavl.draw(canvas);
 	}
@@ -377,7 +385,7 @@ public class TestView extends View {
 	private Bitmap cacheBitmap;
 	private Bitmap getDrawableBitmap() {
 		if (cacheBitmap == null) {
-			cacheBitmap = BitmapFactory.decodeResource(this.getResources(), R.drawable.mesh);
+			cacheBitmap = BitmapFactory.decodeResource(this.getResources(), R.drawable.front);
 		}
 		return cacheBitmap;
 	}
@@ -400,32 +408,22 @@ public class TestView extends View {
 		if (!mAniming) {
 			startCuzierAnimation();
 		} else {
+			if (mOavl != null)
+				mOavl.mAnimTest.stop();
 			mStop = true;
 		}
 	}
 	
 	private void startCuzierAnimation() {
-		Bitmap textureBimatp = getDrawableBitmap();
-		Shader s = new BitmapShader(textureBimatp, Shader.TileMode.CLAMP,
-                Shader.TileMode.CLAMP);
-		mPaint.setShader(s);
-		
-		int w = textureBimatp.getWidth();
-        int h = textureBimatp.getHeight();
-        
-        final RectF renderRect = new RectF(0, 0, w, h);
-        if (mVerControl == null) {
-        	mVerControl = new VerticesControl();
-        	mVerControl.init(10, 10, renderRect);
-        	mVerControl.update(renderRect);
-        }
+		create3DModel();
+		mOavl.mAnimTest.start();
         
         mAniming = true;
         mStop = false;
         this.postInvalidate();
         this.postDelayed(new Runnable() {
         	public void run() {
-        		mVerControl.update(renderRect);
+        		mOavl.update();
         		if (!mStop) {
         			postInvalidate();
         			postDelayed(this, 40);

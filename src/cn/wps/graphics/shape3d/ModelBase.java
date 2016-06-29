@@ -1,73 +1,135 @@
 package cn.wps.graphics.shape3d;
 
-import java.util.ArrayList;
-
-import org.example.localbrowser.AnyObjPool;
-
+import cn.wps.graphics.shape3d.shader2D.ShaderSoftImpl;
 import android.graphics.Bitmap;
-import android.graphics.BitmapShader;
 import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
-import android.graphics.Shader;
-import android.graphics.Paint.Style;
 
-public abstract class ModelBase implements PathDivision.DivisionListener {
-    protected ArrayList<Vector3f> mListVerts = new ArrayList<Vector3f>();
-    protected ArrayList<Vector3f> mListNormals = new ArrayList<Vector3f>();
-    protected MatrixState mMatrixState = new MatrixState();
+public abstract class ModelBase {
+	protected MatrixState mMatrixState;
+	protected PathDivision mPathDivision;
+	protected Object3D mObject3d;
+	protected Light mLight;
+	protected IShader mShader;
+	protected Debugger mDebugger;
     
-    protected AnyObjPool mAnyObjPool = AnyObjPool.getPool();
-    
-    protected Object3D mObject3d = new Object3D();
-    protected Shader2DImpl mShader2d;
-    
-    public Debugger mDebugger;
-    
-	public ModelBase() {
-		mShader2d = new Shader2DImpl(this);
+	public ModelBase(Object3D obj3D) {
+		mObject3d = obj3D;
+		mMatrixState = new MatrixState();
+		mPathDivision = new PathDivision(this, true);
+		mLight = new Light(this);
+		mShader = new ShaderSoftImpl(this);
 		mDebugger = new Debugger(this);
+	}
+	
+	public abstract Path getShapePath();
+	public abstract Bitmap getFrontTexture();
+	public abstract Bitmap getBackTexture();
+	
+	public MatrixState getMatrixState(){
+		return mMatrixState;
+	}
+	
+	public PathDivision getPathDivision() {
+		return mPathDivision;
+	}
+	
+	public Object3D getObject3d() {
+		return mObject3d;
+	}
+	
+	public Light getLight() {
+		return mLight;
+	}
+	
+	public Debugger getDebugger() {
+		return mDebugger;
 	}
 	
 	public void init(RectF viewPort) {
 		mMatrixState.init(viewPort);
-		mMatrixState.updateMatrix();
-		initVerts();
-		mShader2d.init();
+		mPathDivision.makeVertexs();
+		mShader.init();
+		update();
 	}
 	
-	protected void initVerts() {
-		mListVerts.clear();
-		mListNormals.clear();
-		PathDivision division = new PathDivision(this, true);
-		division.makeVertexs();
-		division.dispose();
+	public void update() {
+		if (mAnimTest.isRunning()) {
+			mAnimTest.update();
+		} else {
+			mMatrixState.modelMatrix().reset();
+			mMatrixState.modelMatrix().rotate3d(-45, 0, 1, 0);
+			mMatrixState.updateMatrix();
+			mShader.update();
+		}
 	}
 	
 	public void draw(Canvas canvas) {
-		mShader2d.draw(canvas);
-        mDebugger.drawFrame(canvas);
+		mShader.render(canvas);
+        mDebugger.drawTest(canvas);
 	}
 	
-	public abstract Path getShapePath();
-	
-	public void addVertex(Vector3f v, Vector3f n) {
-		if (v == null || n == null) {
-			return;
-		}
-		mListVerts.add(v);
-		mListNormals.add(n);
+	public void dispose() {
+		mObject3d = null;
+		
+		mPathDivision.dispose();
+		mPathDivision = null;
+		
+		mMatrixState.dispose();
+		mMatrixState = null;
+		
+		mShader.dispose();
+		mShader = null;
+		
+		mLight = null;
+		mDebugger = null;
 	}
 	
-	public void forceClosed() {
-		int size = mListVerts.size();
-		if (size > 0) {
-			// 最后一个代替用第一个形成闭合
-			mListVerts.get(size - 1).set2(mListVerts.get(0));
-			mListNormals.get(size - 1).set2(mListNormals.get(0));
-		}
+	private static boolean sTestAnim = true;
+	public AnimTest mAnimTest = new AnimTest();
+	public class AnimTest {
+		private long mStartTime = 0;
+	    private long mDuration = 10000; // ms
+	    private float mFraction = 0;
+	    
+	    private boolean mRunning = false;
+	    
+	    public void start() {
+	    	mStartTime = System.currentTimeMillis();
+	    	mFraction = 0;
+	    	mRunning = true;
+	    }
+	    
+	    public void stop() {
+	    	mRunning = false;
+	    }
+	    
+	    public boolean isRunning() {
+	    	return mRunning;
+	    }
+	    
+	    public void update() {
+	    	long current = System.currentTimeMillis();
+	    	this.mFraction = ((current - mStartTime) % mDuration) * 1.0f / mDuration;
+	    	this.mFraction = Math.min(this.mFraction, 1.0f);
+	    	
+	    	float stepx = lineStep(0, 0.5f, mFraction);
+	    	float stepy = lineStep(0, 1.0f, mFraction);
+	    	float stepz = lineStep(0, 0.8f, mFraction);
+	    	
+	    	mMatrixState.modelMatrix().reset();
+	    	mMatrixState.modelMatrix().rotate3d(-360 * stepx, 1, 0, 0);
+			mMatrixState.modelMatrix().rotate3d(-360 * stepy, 0, 1, 0);
+			mMatrixState.modelMatrix().rotate3d(-360 * stepz, 0, 0, 1);
+			mMatrixState.updateMatrix();
+			mShader.update();
+	    }
+	    
+	    protected float lineStep(float edge0, float edge1, float x) {
+	        float t = (x - edge0) / (edge1 - edge0);
+	        t = Math.min(Math.max(0, t), 1);
+	        return t * t * (3 - 2 * t);
+	    }
 	}
-	
-	protected abstract Bitmap getTextureBitmap();
 }

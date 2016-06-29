@@ -1,15 +1,12 @@
 package cn.wps.graphics.shape3d;
 
+import java.util.ArrayList;
+
 import android.graphics.Path;
 import android.graphics.PathMeasure;
 import android.util.Log;
 
 public class PathDivision {
-	public interface DivisionListener {
-		Path getShapePath();
-		void addVertex(Vector3f v, Vector3f n);
-		void forceClosed();
-	}
 	private boolean forceClosed = false;
 	private int similarTanStart = -1; 
 	private int pointCount = 0;
@@ -24,25 +21,47 @@ public class PathDivision {
     private int lineCount = 0;
     private int measureLength = 0;
     private PathMeasure measure;
-    private DivisionListener mListener;
+    private ModelBase mModel;
     
     private boolean mAddOne = false;
     private static final float SIMILAR_TAN_MAX = 0.38f;
     private float similarTanAllow = SIMILAR_TAN_MAX;
     
-	public PathDivision(DivisionListener listener, boolean forceClosed) {
-		this.mListener = listener;
+    private ArrayList<Vector3f> mListVerts = new ArrayList<Vector3f>();
+	private ArrayList<Vector3f> mListNormals = new ArrayList<Vector3f>();
+	
+	public ArrayList<Vector3f> getVerts() {
+		return mListVerts;
+	}
+	
+	public ArrayList<Vector3f> getNormals() {
+		return mListNormals;
+	}
+    
+	public PathDivision(ModelBase model, boolean forceClosed) {
+		this.mModel = model;
 		this.forceClosed = forceClosed;
-		
-		this.measure = new PathMeasure(mListener.getShapePath(), forceClosed);
-		this.measureLength = (int)measure.getLength();
 	}
 	
 	public void dispose() {
+		for (Vector3f v : mListVerts) {
+			v.recycle();
+		}
+		mListVerts.clear();
+		for (Vector3f n : mListNormals) {
+			n.recycle();
+		}
+		mListNormals.clear();
     }
 	
 	public void makeVertexs() {
 		long start = System.currentTimeMillis();
+		mListVerts.clear();
+		mListNormals.clear();
+		if (this.measure == null) {
+			this.measure = new PathMeasure(mModel.getShapePath(), forceClosed);
+			this.measureLength = (int)measure.getLength();
+		}
         for (int i = 0; i < measureLength; i++) {
             if (measure.getPosTan(i, curPos, curTan)) {
                 if (i == 0) {
@@ -74,7 +93,7 @@ public class PathDivision {
         
         // 强制Path闭合进行处理
         if (forceClosed) {
-        	mListener.forceClosed();
+        	forceClosed();
         }
 
         Log.d("Simulate3D", "makeVertexs " + measureLength + ",triangleCount " + triangleCount + ",lineCount " + lineCount + ",time " + (System.currentTimeMillis() - start));
@@ -89,7 +108,7 @@ public class PathDivision {
 				Vector3f v = Vector3f.obtain().set2(tempPos[0], tempPos[1], 0);
 				Vector3f n = Vector3f.obtain().set2(tempTan[0], tempTan[1], 0); 
 				n.crossProduct2(ZInerVer).normalize();
-				mListener.addVertex(v, n);
+				addVertex(v, n);
 	        	mAddOne = true;
 			}
 		}
@@ -97,7 +116,24 @@ public class PathDivision {
 			Vector3f v = Vector3f.obtain().set2(tempPos[0], tempPos[1], 0);
 			Vector3f n = Vector3f.obtain().set2(tempTan[0], tempTan[1], 0); 
 			n.crossProduct2(ZInerVer).normalize();
-			mListener.addVertex(v, n);
+			addVertex(v, n);
+		}
+	}
+	
+	public void addVertex(Vector3f v, Vector3f n) {
+		if (v == null || n == null) {
+			return;
+		}
+		mListVerts.add(v);
+		mListNormals.add(n);
+	}
+	
+	public void forceClosed() {
+		int size = mListVerts.size();
+		if (size > 0) {
+			// 最后一个代替用第一个形成闭合
+			mListVerts.get(size - 1).set2(mListVerts.get(0));
+			mListNormals.get(size - 1).set2(mListNormals.get(0));
 		}
 	}
 	

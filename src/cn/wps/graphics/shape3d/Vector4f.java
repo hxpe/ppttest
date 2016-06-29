@@ -1,6 +1,5 @@
 package cn.wps.graphics.shape3d;
 
-
 /**
  *	四元空间向量类
  */
