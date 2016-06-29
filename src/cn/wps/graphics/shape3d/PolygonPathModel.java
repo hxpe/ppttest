@@ -38,7 +38,7 @@ public class PolygonPathModel extends ModelBase {
 		if (mFrontTexture == null) {
 			mFrontTexture = Bitmap.createBitmap((int)Math.ceil(mMatrixState.getViewPort().width()), 
 					(int)Math.ceil(mMatrixState.getViewPort().height()), Config.ARGB_8888);
-			Bitmap res = BitmapFactory.decodeResource(mRes, R.drawable.front);
+			Bitmap res = BitmapFactory.decodeResource(mRes, R.drawable.back);
 			Paint paint = new Paint();
 			Canvas canvas = new Canvas(mFrontTexture);
 			canvas.drawBitmap(res, new Rect(0, 0, res.getWidth(), res.getHeight()), 
@@ -53,7 +53,7 @@ public class PolygonPathModel extends ModelBase {
 		if (mBackTexture == null) {
 			mBackTexture = Bitmap.createBitmap((int)Math.ceil(mMatrixState.getViewPort().width()), 
 					(int)Math.ceil(mMatrixState.getViewPort().height()), Config.ARGB_8888);
-			Bitmap res = BitmapFactory.decodeResource(mRes, R.drawable.back);
+			Bitmap res = BitmapFactory.decodeResource(mRes, R.drawable.front);
 			Paint paint = new Paint();
 			Canvas canvas = new Canvas(mBackTexture);
 			canvas.drawBitmap(res, new Rect(0, 0, res.getWidth(), res.getHeight()), 

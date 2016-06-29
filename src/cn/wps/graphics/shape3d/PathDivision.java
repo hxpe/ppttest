@@ -11,9 +11,7 @@ public class PathDivision {
 	private int similarTanStart = -1; 
 	private int pointCount = 0;
 
-    private float firstPos[] = new float[2];
     private float curPos[] = new float[2];
-    private float lastPos[] = new float[2];
     private float curTan[] = new float[2];
     private float lastTan[] = new float[2];
     private float preTan[] = new float[2];
@@ -62,13 +60,13 @@ public class PathDivision {
 			this.measure = new PathMeasure(mModel.getShapePath(), forceClosed);
 			this.measureLength = (int)measure.getLength();
 		}
+		long detailTime = 0;
         for (int i = 0; i < measureLength; i++) {
+        	
             if (measure.getPosTan(i, curPos, curTan)) {
                 if (i == 0) {
                 	System.arraycopy(curTan, 0, lastTan, 0, 2);
                 	System.arraycopy(curTan, 0, preTan, 0, 2);
-                	System.arraycopy(curPos, 0, lastPos, 0, 2);
-                	System.arraycopy(curPos, 0, firstPos, 0, 2);
                     similarTanStart = 0;
                     pointCount = 1;
                     continue;
@@ -76,17 +74,18 @@ public class PathDivision {
 
                 pointCount++;
 
+                long before = System.currentTimeMillis();
                 if (isSimilarTan(curTan, lastTan, preTan) && i < measureLength - 1) {
                 	System.arraycopy(curTan, 0, preTan, 0, 2);
+                	detailTime += System.currentTimeMillis() - before;
                     continue;
                 }
-
+                detailTime += System.currentTimeMillis() - before;
                 meetPartPath();
                 similarTanStart = i;
                 pointCount = 1;
                 System.arraycopy(curTan, 0, lastTan, 0, 2);
                 System.arraycopy(curTan, 0, preTan, 0, 2);
-                System.arraycopy(curPos, 0, lastPos, 0, 2);
                 similarTanAllow  = SIMILAR_TAN_MAX;
             }
         }
@@ -96,7 +95,7 @@ public class PathDivision {
         	forceClosed();
         }
 
-        Log.d("Simulate3D", "makeVertexs " + measureLength + ",triangleCount " + triangleCount + ",lineCount " + lineCount + ",time " + (System.currentTimeMillis() - start));
+        Log.d("Simulate3D", "makeVertexs " + measureLength + ",triangleCount " + triangleCount + ",lineCount " + lineCount + ",total time " + (System.currentTimeMillis() - start) + " detailTime " + detailTime);
 	}
 	
 	private float tempPos[] = new float[2];
