@@ -43,6 +43,10 @@ public abstract class ModelBase {
 		return mLight;
 	}
 	
+	public IShader getShader() {
+		return mShader;
+	}
+	
 	public Debugger getDebugger() {
 		return mDebugger;
 	}
@@ -59,7 +63,7 @@ public abstract class ModelBase {
 			mAnimTest.update();
 		} else {
 			mMatrixState.modelMatrix().reset();
-			mMatrixState.modelMatrix().rotate3d(-45, 0, 1, 0);
+			mMatrixState.modelMatrix().rotate3d(-45, 1, 0, 0);
 			mMatrixState.updateMatrix();
 			mShader.update();
 		}
@@ -90,7 +94,7 @@ public abstract class ModelBase {
 	public AnimTest mAnimTest = new AnimTest();
 	public class AnimTest {
 		private long mStartTime = 0;
-	    private long mDuration = 10000; // ms
+	    private long mDuration = 20000; // ms
 	    private float mFraction = 0;
 	    
 	    private boolean mRunning = false;

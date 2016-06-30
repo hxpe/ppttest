@@ -32,7 +32,7 @@ public class Debugger {
 		
 //		if (mModel.getShader() instanceof ShaderSoftImpl) {
 //			ShaderSoftImpl shader2d = (ShaderSoftImpl)mModel.getShader();
-//			drawSlideEdge(canvas, shader2d.getSlideFace(), false);
+//			drawSlideEdge(canvas, shader2d.getSlideFace(), true);
 //			if (shader2d.getFrontFace().isVisible())
 //				drawMainFaceMesh(canvas, shader2d.getFrontFace());
 //		}

@@ -89,14 +89,4 @@ public class SlideFaceMesh extends Mesh2D {
         
         Log.d("Simulate3D", "update Mesh of Profile " + (System.currentTimeMillis() - start));
 	}
-	
-	// 根据三角形按照逆转计算朝向
-	private Vector3f pvTemp = new Vector3f();
-	private Vector3f pvTemp2 = new Vector3f();
-	private boolean isTriangleFront(Vector3f pv1, Vector3f pv2, Vector3f pv3) {
-		pvTemp.set2(pv2).sub(pv1);
-		pvTemp2.set2(pv3).sub(pv2);
-		pvTemp.crossProduct2(pvTemp2).normalize();
-		return pvTemp.z > 0;
-	}
 }

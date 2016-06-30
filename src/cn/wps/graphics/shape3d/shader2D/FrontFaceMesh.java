@@ -102,10 +102,19 @@ public class FrontFaceMesh extends Mesh2D {
 	
 	@Override
 	protected void updateVisible() {
-		Vector3f frontNormal = Vector3f.obtain().set2(getFaceNormal());
-		mModel.getMatrixState().transformMap(frontNormal, frontNormal);
-		mIsVisible = frontNormal.z > 0;
-		frontNormal.recycle();
+		RectF viewPort = mModel.getMatrixState().getViewPort();
+		Vector3f topLeft = Vector3f.obtain().set2(viewPort.left, viewPort.top, 0);
+		Vector3f topBottom = Vector3f.obtain().set2(viewPort.left, viewPort.bottom, 0);
+		Vector3f rightTop = Vector3f.obtain().set2(viewPort.right, viewPort.top, 0);
+		
+		mModel.getMatrixState().projectionMap(topLeft, topLeft);
+		mModel.getMatrixState().projectionMap(topBottom, topBottom);
+		mModel.getMatrixState().projectionMap(rightTop, rightTop);
+		mIsVisible = isTriangleFront(topBottom, topLeft, rightTop);
+		
+		topLeft.recycle();
+		topBottom.recycle();
+		rightTop.recycle();
 	}
 	
 	private static Vector3f sNormal = new Vector3f(0, 0, 1);

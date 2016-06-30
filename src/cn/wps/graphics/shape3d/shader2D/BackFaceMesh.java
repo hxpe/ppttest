@@ -3,6 +3,7 @@ package cn.wps.graphics.shape3d.shader2D;
 import android.graphics.Bitmap;
 import android.graphics.BitmapShader;
 import android.graphics.Canvas;
+import android.graphics.RectF;
 import android.graphics.Shader;
 import android.util.Log;
 import cn.wps.graphics.shape3d.ModelBase;
@@ -26,6 +27,27 @@ public class BackFaceMesh extends FrontFaceMesh {
 	@Override
 	protected float getFaceOffset() {
 		return mModel.getObject3d().height;
+	}
+	
+	@Override
+	protected void updateVisible() {
+		RectF viewPort = mModel.getMatrixState().getViewPort();
+		float offset = getFaceOffset();
+		Vector3f topLeft = Vector3f.obtain().set2(viewPort.left, viewPort.top, 0);
+		topLeft.subZ(offset);
+		Vector3f topBottom = Vector3f.obtain().set2(viewPort.left, viewPort.bottom, 0);
+		topBottom.subZ(offset);
+		Vector3f rightTop = Vector3f.obtain().set2(viewPort.right, viewPort.top, 0);
+		rightTop.subZ(offset);
+		
+		mModel.getMatrixState().projectionMap(topLeft, topLeft);
+		mModel.getMatrixState().projectionMap(topBottom, topBottom);
+		mModel.getMatrixState().projectionMap(rightTop, rightTop);
+		mIsVisible = !isTriangleFront(topBottom, topLeft, rightTop);
+		
+		topLeft.recycle();
+		topBottom.recycle();
+		rightTop.recycle();
 	}
 	
 	@Override

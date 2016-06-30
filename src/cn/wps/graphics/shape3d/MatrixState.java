@@ -60,8 +60,9 @@ public class MatrixState {
     private float[] mPointCache = new float[] {0, 0, 0, 1};
     public void projectionMap(Vector3f src, Vector3f dest) {
     	synchronized (mPointCache) {
+    		// 变换到opengl的坐标空间(对象中心为原点，Y向上正向)
     		mPointCache[0] = (src.x - mCenterX);
-        	mPointCache[1] = (src.y - mCenterY);
+        	mPointCache[1] = (mCenterY - src.y);
         	mPointCache[2] = src.z;
         	mPointCache[3] = 1;
         	// MVP转换
@@ -72,9 +73,10 @@ public class MatrixState {
         	dest.z = mPointCache[2] / mPointCache[3];
 		}
     	
-    	// 到视口的变换
+    	// 变换回Canvas的视口坐标空间（对象左上角为原点，Y向下正向）
+    	// Z仍保留在规范化坐标空间中[-1,1],后面可能用到的地方是深度排序
     	dest.x = mCenterX + mHalfX * dest.x;
-    	dest.y = mCenterY + mHalfY * dest.y;
+    	dest.y = mCenterY - mHalfY * dest.y;
     }
     
     public void normalMap(Vector3f src, Vector3f dest) {

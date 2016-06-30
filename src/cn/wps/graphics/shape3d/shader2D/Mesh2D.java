@@ -1,6 +1,7 @@
 package cn.wps.graphics.shape3d.shader2D;
 
 import cn.wps.graphics.shape3d.ModelBase;
+import cn.wps.graphics.shape3d.Vector3f;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 
@@ -57,5 +58,15 @@ public abstract class Mesh2D {
 	
 	public boolean isVisible() {
 		return mIsVisible;
+	}
+	
+	// 根据三角形按照逆转计算朝向
+	private Vector3f pvTemp = new Vector3f();
+	private Vector3f pvTemp2 = new Vector3f();
+	protected boolean isTriangleFront(Vector3f pv1, Vector3f pv2, Vector3f pv3) {
+		pvTemp.set2(pv2).sub2(pv1);
+		pvTemp2.set2(pv3).sub2(pv2);
+		pvTemp.crossProduct2(pvTemp2).normalize();
+		return pvTemp.z > 0;
 	}
 }
