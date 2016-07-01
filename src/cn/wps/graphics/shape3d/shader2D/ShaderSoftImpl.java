@@ -1,6 +1,7 @@
 package cn.wps.graphics.shape3d.shader2D;
 
 import android.graphics.Canvas;
+import android.util.Log;
 import cn.wps.graphics.shape3d.IShader;
 import cn.wps.graphics.shape3d.ModelBase;
 
@@ -9,21 +10,29 @@ import cn.wps.graphics.shape3d.ModelBase;
  */
 public class ShaderSoftImpl implements IShader {
 	private ModelBase mModel;
-	private Mesh2D mSlideFaceMesh;
-	private Mesh2D mFrontFaceMesh;
-	private Mesh2D mBackFaceMesh;
+	private Shader2DBase mSlideFaceMesh;
+	private Shader2DBase mFrontFaceMesh;
+	private Shader2DBase mBackFaceMesh;
 	
 	public ShaderSoftImpl(ModelBase model) {
 		mModel = model;
 		mSlideFaceMesh = new SlideFaceMesh(model);
-		mFrontFaceMesh = new FrontFaceMesh(model);
+		
+		if (isCamera3DEnable()) {
+			mFrontFaceMesh = new MainFaceRender(model);
+		} else {
+			mFrontFaceMesh = new FrontFaceMesh(model);
+		}
+		
 		mBackFaceMesh = new BackFaceMesh(model);
 	}
 	
 	public void init() {
+		long start = System.currentTimeMillis();
 		mSlideFaceMesh.init();
 		mFrontFaceMesh.init();
 		mBackFaceMesh.init();
+		Log.d("ModelBase", "shader2D init " + (System.currentTimeMillis() - start));
 	}
 	
 	public void update() {
@@ -32,25 +41,33 @@ public class ShaderSoftImpl implements IShader {
 		mBackFaceMesh.update();
 	}
 	
+	// 当前状态是否允许使用Camera3D构造变换矩阵
+	protected boolean isCamera3DEnable() {
+		// TODO；如果存在棱台的情况下，不能简单的靠转换矩阵了
+		return true;
+	}
+	
 	public void render(Canvas canvas) {
-		mSlideFaceMesh.draw(canvas);
-		mFrontFaceMesh.draw(canvas);
-		mBackFaceMesh.draw(canvas);
+		mSlideFaceMesh.render(canvas);
+		mFrontFaceMesh.render(canvas);
+		mBackFaceMesh.render(canvas);
 	}
 	
 	public void dispose() {
-		
+		mSlideFaceMesh.dispose();
+		mFrontFaceMesh.dispose();
+		mBackFaceMesh.dispose();
 	}
 	
-	public Mesh2D getSlideFace() {
+	public Shader2DBase getSlideFace() {
 		return mSlideFaceMesh;
 	}
 	
-	public Mesh2D getFrontFace() {
+	public Shader2DBase getFrontFace() {
 		return mFrontFaceMesh;
 	}
 	
-	public Mesh2D getBackFace() {
+	public Shader2DBase getBackFace() {
 		return mBackFaceMesh;
 	}
 }

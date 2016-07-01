@@ -51,7 +51,7 @@ public class BackFaceMesh extends FrontFaceMesh {
 	}
 	
 	@Override
-	public void draw(Canvas canvas) {
+	public void render(Canvas canvas) {
 		if (mIsVisible) {
 			long start = System.currentTimeMillis();
 			canvas.save();

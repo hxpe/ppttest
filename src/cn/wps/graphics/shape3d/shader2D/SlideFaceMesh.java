@@ -34,8 +34,10 @@ public class SlideFaceMesh extends Mesh2D {
 	}
 	
 	@Override
-	public void draw(Canvas canvas) {
-		super.draw(canvas);
+	public void render(Canvas canvas) {
+		long start = System.currentTimeMillis();
+		super.render(canvas);
+		Log.d("ModelBase", "draw slide " + (System.currentTimeMillis() - start));
 	}
 	
 	@Override

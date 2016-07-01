@@ -82,7 +82,7 @@ public class FrontFaceMesh extends Mesh2D {
 	}
 	
 	@Override
-	public void draw(Canvas canvas) {
+	public void render(Canvas canvas) {
 		if (mIsVisible) {
 			long start = System.currentTimeMillis();
 			canvas.save();
@@ -91,7 +91,6 @@ public class FrontFaceMesh extends Mesh2D {
 			Shader s = new BitmapShader(textureBimatp, Shader.TileMode.CLAMP,
 	                Shader.TileMode.CLAMP);
 			mPaint.setShader(s);
-			Log.d("ModelBase", "BitmapShader " + (System.currentTimeMillis() - start));
 	        canvas.drawVertices(Canvas.VertexMode.TRIANGLE_FAN, mCacheArrayCount, mVerts, 0,
 	        		mTexs, 0, null, 0, mIndices, 0, mIndicesRealCount, mPaint);
 	        mPaint.setShader(null);

@@ -30,12 +30,13 @@ public class Debugger {
 			return;
 		}
 		
-//		if (mModel.getShader() instanceof ShaderSoftImpl) {
-//			ShaderSoftImpl shader2d = (ShaderSoftImpl)mModel.getShader();
-//			drawSlideEdge(canvas, shader2d.getSlideFace(), true);
+		if (mModel.getShader() instanceof ShaderSoftImpl) {
+			ShaderSoftImpl shader2d = (ShaderSoftImpl)mModel.getShader();
+			if (shader2d.getSlideFace() instanceof Mesh2D)
+				drawSlideEdge(canvas, (Mesh2D)shader2d.getSlideFace(), true);
 //			if (shader2d.getFrontFace().isVisible())
 //				drawMainFaceMesh(canvas, shader2d.getFrontFace());
-//		}
+		}
 		
 		drawFrame(canvas);
 	}
@@ -111,14 +112,14 @@ public class Debugger {
 		if (verts == null) {
 			return;
 		}
-		testPaint.setStrokeWidth(1);
-		testPaint.setColor(0xff0000ff);
+		testPaint.setStrokeWidth(3);
+		testPaint.setColor(0xffff0000);
 		for (int i = 0, size = verts.length / 4 - 1; i < size; i++) {
 			canvas.drawLine(verts[i * 4], verts[i * 4 + 1], 
 					verts[(i + 1) * 4], verts[(i + 1) * 4 + 1], testPaint);
 		}
 		if (drawBackEdge) {
-			testPaint.setColor(0xff00ff00);
+			testPaint.setColor(0xff0000ff);
 			for (int i = 0, size = verts.length / 4 - 1; i < size; i++) {
 				canvas.drawLine(verts[i * 4 + 2], verts[i * 4 + 3], 
 						verts[(i + 1) * 4 + 2], verts[(i + 1) * 4 + 3], testPaint);
@@ -144,30 +145,5 @@ public class Debugger {
 			canvas.drawLine(centerX, centerY, 
 					verts[i * 2], verts[i * 2 + 1], testPaint);
 		}
-	}
-	
-	public void drawFrontFace(Canvas canvas) {
-		canvas.save();
-		Bitmap textureBimatp = mModel.getFrontTexture();
-		Shader s = new BitmapShader(textureBimatp, Shader.TileMode.CLAMP,
-                Shader.TileMode.CLAMP);
-		testPaint.setShader(s);
-		canvas.drawPath(mModel.getShapePath(), testPaint);
-		testPaint.setShader(null);
-		canvas.restore();
-	}
-	
-	private Camera mCamera = new Camera();
-    private Matrix mMatrix = new Matrix();
-	private Matrix getCameraMatrix() {
-		mMatrix.reset();
-		mCamera.save();
-		mCamera.rotateY(-45);
-		mCamera.getMatrix(mMatrix);
-		RectF viewPort = mModel.getMatrixState().getViewPort();
-		mMatrix.preTranslate(-viewPort.width() / 2, -viewPort.height() / 2);
-		mMatrix.postTranslate(viewPort.height() / 2, viewPort.height() / 2);
-		mCamera.restore();
-		return mMatrix;
 	}
 }
