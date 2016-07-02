@@ -2,6 +2,7 @@ package cn.wps.graphics.shape3d.shader2D;
 
 import cn.wps.graphics.shape3d.ModelBase;
 import cn.wps.graphics.shape3d.Vector3f;
+import cn.wps.graphics.shape3d.Camera.Camera3D;
 import android.graphics.Bitmap;
 import android.graphics.BitmapShader;
 import android.graphics.Camera;
@@ -18,7 +19,10 @@ import android.util.Log;
 public class MainFaceRender extends Shader2DBase {
 	private Camera mCamera = new Camera();
     private Matrix mMatrix = new Matrix();
-	protected Paint mPaint = new Paint();
+    private Paint mPaint = new Paint();
+	
+	private Camera3D mCamera3d = new Camera3D();
+	private Matrix mMatrix2 = new Matrix();
 	
 	public MainFaceRender(ModelBase model) {
 		super(model);
@@ -61,6 +65,7 @@ public class MainFaceRender extends Shader2DBase {
 		}
 		
 		updateCameraMatrix();
+		updateCameraMatrix2();
 	}
 	
 	@Override
@@ -90,5 +95,17 @@ public class MainFaceRender extends Shader2DBase {
 		mMatrix.preTranslate(-viewPort.width() / 2, -viewPort.height() / 2);
 		mMatrix.postTranslate(viewPort.height() / 2, viewPort.height() / 2);
 		mCamera.restore();
+	}
+	
+	private void updateCameraMatrix2() {
+		mMatrix2.reset();
+		mCamera3d.save();
+		mCamera3d.setLocation(0, 0, -mModel.getMatrixState().getEyez() / 72);
+		mCamera3d.getTransfromMatrix().setRotation3d(45, 1, 0, 0);
+		mCamera3d.getMatrix(mMatrix2);
+		RectF viewPort = mModel.getMatrixState().getViewPort();
+		mMatrix2.preTranslate(-viewPort.width() / 2, -viewPort.height() / 2);
+		mMatrix2.postTranslate(viewPort.height() / 2, viewPort.height() / 2);
+		mCamera3d.restore();
 	}
 }

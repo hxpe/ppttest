@@ -2,19 +2,19 @@ package cn.wps.graphics.shape3d;
 
 import android.opengl.Matrix;
 
-public class GlMatrix {
+public class Matrix3D {
     private final static float[] sTemp = new float[16];
     private float[] m = new float[16];
 
-    public GlMatrix() {
+    public Matrix3D() {
         Matrix.setIdentityM(m, 0);
     }
 
-    public GlMatrix(float[] value) {
+    public Matrix3D(float[] value) {
         System.arraycopy(value, 0, m, 0, m.length);
     }
 
-    public GlMatrix(GlMatrix src) {
+    public Matrix3D(Matrix3D src) {
         System.arraycopy(src.m, 0, m, 0, m.length);
     }
 
@@ -22,18 +22,18 @@ public class GlMatrix {
         return m;
     }
 
-    public static GlMatrix concat(GlMatrix lhs, GlMatrix rhs) {
-        GlMatrix result = new GlMatrix();
+    public static Matrix3D concat(Matrix3D lhs, Matrix3D rhs) {
+        Matrix3D result = new Matrix3D();
         Matrix.multiplyMM(result.m, 0, lhs.m, 0, rhs.m, 0);
         return result;
     }
-    public static float[] mapPoint(GlMatrix mat, float x, float y){
+    public static float[] mapPoint(Matrix3D mat, float x, float y){
         float[] src = new float[] { x, y, 0, 1};
         Matrix.multiplyMV(src, 0, mat.getValues(), 0, src, 0);
         return src;
     }
     // points: {x0,y0, x1,y1, x2,y2, ...}
-    public static void mapPoint(GlMatrix mat, float[] dst, int offset, float[] points){
+    public static void mapPoint(Matrix3D mat, float[] dst, int offset, float[] points){
         if (dst.length < points.length){
             throw new IllegalArgumentException("dst.length < points.length");
         }
@@ -47,25 +47,25 @@ public class GlMatrix {
         }
     }
     
-    public static void mapPoint(GlMatrix mat, float[] dst, float[] points){
+    public static void mapPoint(Matrix3D mat, float[] dst, float[] points){
         mapPoint(mat, dst, 0, points);
     }
 
-    public void preConcat(GlMatrix hs) {
+    public void preConcat(Matrix3D hs) {
         synchronized(sTemp) {
             System.arraycopy(m, 0, sTemp, 0, m.length);
             Matrix.multiplyMM(m, 0, sTemp, 0, hs.m, 0);
         }
     }
 
-    public void forwardConcat(GlMatrix hs) {
+    public void forwardConcat(Matrix3D hs) {
         synchronized(sTemp) {
             System.arraycopy(m, 0, sTemp, 0, m.length);
             Matrix.multiplyMM(m, 0, hs.m, 0, sTemp, 0);
         }
     }
 
-    public void invertAndTranspose(GlMatrix dest) {
+    public void invertAndTranspose(Matrix3D dest) {
         synchronized(sTemp) {
             Matrix.invertM(sTemp, 0, m, 0);
             Matrix.transposeM(dest.m, 0, sTemp, 0);
@@ -187,7 +187,7 @@ public class GlMatrix {
         Matrix.multiplyMM(m, 0, m, 0, skew, 0);
     }
 
-    public void setMatrix(GlMatrix src) {
+    public void setMatrix(Matrix3D src) {
         System.arraycopy(src.m, 0, m, 0, m.length);
     }
 
@@ -206,4 +206,42 @@ public class GlMatrix {
         rotate3d(degree, 1, 0, 0);
         translate(0, -yoffset);
     }
+    
+    public void mapPoint(final Vector3f src, Vector3f dst) {
+    	float [] srcArray = new float[]{src.x, src.y, src.z};
+        float x = scalarDot(3, m, 0, 4, srcArray, 0, 1) + m[3 * 4];
+        float y = scalarDot(3, m, 1, 4, srcArray, 0, 1) + m[3 * 4 + 1];
+        float z = scalarDot(3, m, 2, 4, srcArray, 0, 1) + m[3 * 4 + 2];
+        dst.set(x, y, z);
+    }
+
+    public void mapVector(final Vector3f src, Vector3f dst) {
+    	float [] srcArray = new float[]{src.x, src.y, src.z};
+        float x = scalarDot(3, m, 0, 4, srcArray, 0, 1);
+        float y = scalarDot(3, m, 1, 4, srcArray, 0, 1);
+        float z = scalarDot(3, m, 2, 4, srcArray, 0, 1);
+        dst.set(x, y, z);
+    }
+    
+    public static float scalarDotDiv(int count, float a[], int offset_a, int step_a,
+            float b[], int offset_b, int step_b, float denom) {
+		float prod = 0;
+		for (int i = 0; i < count; i++) {
+			prod += a[offset_a] * b[offset_b];
+			offset_a += step_a;
+			offset_b += step_b;
+		}
+		return prod / denom;
+	}
+	
+	public static float scalarDot(int count, float a[], int offset_a, int step_a,
+            float b[], int offset_b, int step_b) {
+		float prod = 0;
+		for (int i = 0; i < count; i++) {
+			prod += a[offset_a] * b[offset_b];
+			offset_a += step_a;
+			offset_b += step_b;
+		}
+		return prod;
+	}
 }

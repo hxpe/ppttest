@@ -7,16 +7,16 @@ public class MatrixState {
 	private final static float FOVY = 22.5f; // 透视投影视场角
 	
 	private RectF mViewPort = new RectF();
-    protected GlMatrix mTempMat = new GlMatrix();
+    protected Matrix3D mTempMat = new Matrix3D();
     protected float mEyez = 0;
     public RectF mRenderRect;
     
-    protected GlMatrix mMatPerspective = new GlMatrix();
-    protected GlMatrix mMatModel = new GlMatrix();
-    protected GlMatrix mMatView = new GlMatrix();
-    protected GlMatrix mMatTransform = new GlMatrix();
-    protected GlMatrix mMatMVP = new GlMatrix();
-    protected GlMatrix mMatNormal = new GlMatrix();
+    protected Matrix3D mMatPerspective = new Matrix3D();
+    protected Matrix3D mMatModel = new Matrix3D();
+    protected Matrix3D mMatView = new Matrix3D();
+    protected Matrix3D mMatTransform = new Matrix3D();
+    protected Matrix3D mMatMVP = new Matrix3D();
+    protected Matrix3D mMatNormal = new Matrix3D();
     
     protected float mHalfX;
     protected float mHalfY;
@@ -45,8 +45,12 @@ public class MatrixState {
     	return mEyez;
     }
     
-    public GlMatrix modelMatrix() {
+    public Matrix3D modelMatrix() {
     	return mMatModel;
+    }
+    
+    public Matrix3D transfromMatrix() {
+    	return mMatTransform;
     }
     
     protected void initPerspectiveMatrix() {

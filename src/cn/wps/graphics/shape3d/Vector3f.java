@@ -96,6 +96,13 @@ public class Vector3f {
         this.z -= z;
     }
 
+    public Vector3f sub2(float x, float y, float z){
+    	this.x -= x;
+        this.y -= y;
+        this.z -= z;
+        return this;
+    }
+    
     public Vector3f sub2(Vector3f v){
         sub(v);
         return this;

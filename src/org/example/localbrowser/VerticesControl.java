@@ -1,6 +1,6 @@
 package org.example.localbrowser;
 
-import cn.wps.graphics.shape3d.GlMatrix;
+import cn.wps.graphics.shape3d.Matrix3D;
 import cn.wps.graphics.shape3d.Vector3f;
 import cn.wps.graphics.shape3d.Vector4f;
 import android.graphics.PointF;
@@ -22,12 +22,12 @@ public class VerticesControl {
     protected int MeshCul = MeshRow;
     
     private RectF mViewPort = new RectF();
-    protected GlMatrix mTempMat = new GlMatrix();
+    protected Matrix3D mTempMat = new Matrix3D();
     private float mEyez = 0;
     protected RectF mAspectRatioRect;
-    private GlMatrix mPerspective = new GlMatrix();
-    private GlMatrix mViewMat = new GlMatrix();
-    private GlMatrix mMVP = new GlMatrix();
+    private Matrix3D mPerspective = new Matrix3D();
+    private Matrix3D mViewMat = new Matrix3D();
+    private Matrix3D mMVP = new Matrix3D();
     
     private AnyObjPool mAnyObjPool = AnyObjPool.getPool();
     
@@ -63,7 +63,7 @@ public class VerticesControl {
     }
     
     float[] mPointCache = new float[] {0, 0, 0, 1};
-    public float[] mapPoint(GlMatrix mat, float x, float y, float z){
+    public float[] mapPoint(Matrix3D mat, float x, float y, float z){
     	mPointCache[0] = x;
     	mPointCache[1] = y;
     	mPointCache[2] = z;

@@ -369,7 +369,7 @@ public class TestView extends View {
 	ModelBase mOavl; 
 	private void create3DModel() {
 		if (mOavl == null) {
-			mOavl  = new OavlPathModel(this.getResources(), new Object3D());
+			mOavl  = new PolygonPathModel(this.getResources(), new Object3D());
 			mOavl.init(new RectF(0, 0, 1000, 1000));
 		}
 	}

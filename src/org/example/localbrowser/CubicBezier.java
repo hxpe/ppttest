@@ -34,7 +34,7 @@ import android.opengl.Matrix;
 
 import java.util.ArrayList;
 
-import cn.wps.graphics.shape3d.GlMatrix;
+import cn.wps.graphics.shape3d.Matrix3D;
 import cn.wps.graphics.shape3d.Vector3f;
 
 public class CubicBezier {
@@ -96,7 +96,7 @@ public class CubicBezier {
     }
 
     // 获取Bernstein多项式的调和矩阵(其中的常量矩阵)，或其转置
-    private static GlMatrix getBernsteinMatrix(boolean transpose) {
+    private static Matrix3D getBernsteinMatrix(boolean transpose) {
         final float[] bernsteinConstMatrix = {
                 -1, 3, -3, 1,
                 3, -6, 3, 0,
@@ -104,7 +104,7 @@ public class CubicBezier {
                 1, 0, 0, 0
         };
 
-        GlMatrix m = new GlMatrix();
+        Matrix3D m = new Matrix3D();
         System.arraycopy(bernsteinConstMatrix, 0, m.getValues(), 0, bernsteinConstMatrix.length);
         if (transpose) {
             Matrix.transposeM(m.getValues(), 0, bernsteinConstMatrix, 0);
@@ -112,13 +112,13 @@ public class CubicBezier {
         return m;
     }
 
-    private static GlMatrix sBezierBaseMatrix = getBernsteinMatrix(false);
-    private static GlMatrix sBezierTransposeMatrix = getBernsteinMatrix(true);
+    private static Matrix3D sBezierBaseMatrix = getBernsteinMatrix(false);
+    private static Matrix3D sBezierTransposeMatrix = getBernsteinMatrix(true);
 
     private static final int mRowNum = 4;
     private static final int mCulNum = 4;
-    private ArrayList<GlMatrix> mlistBezierMatrix = new ArrayList<GlMatrix>();
-    private GlMatrix mTempMatrix = new GlMatrix();
+    private ArrayList<Matrix3D> mlistBezierMatrix = new ArrayList<Matrix3D>();
+    private Matrix3D mTempMatrix = new Matrix3D();
     private ArrayList<Point> mControlPoints = new ArrayList<Point>();
     private boolean mDirty = true;
     public CubicBezier() {
@@ -128,7 +128,7 @@ public class CubicBezier {
     private void init() {
         mlistBezierMatrix.clear();
         for (int i = 0; i < 3; i++) {
-            mlistBezierMatrix.add(new GlMatrix());
+            mlistBezierMatrix.add(new Matrix3D());
         }
 
         mControlPoints.clear();
@@ -218,13 +218,13 @@ public class CubicBezier {
             value[i] = mControlPoints.get(i).get(axisIndex);
         }
 
-        GlMatrix m = mlistBezierMatrix.get(axisIndex);
+        Matrix3D m = mlistBezierMatrix.get(axisIndex);
         m.setMatrix(sBezierBaseMatrix);
         m.preConcat(mTempMatrix);
         m.preConcat(sBezierTransposeMatrix);
     }
 
-    private GlMatrix getMatrix(int axisIndex) {
+    private Matrix3D getMatrix(int axisIndex) {
         update(false);
         return mlistBezierMatrix.get(axisIndex);
     }
