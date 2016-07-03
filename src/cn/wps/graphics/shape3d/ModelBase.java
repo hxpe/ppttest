@@ -63,8 +63,22 @@ public abstract class ModelBase {
 			mAnimTest.update();
 		} else {
 			mMatrixState.modelMatrix().reset();
-			mMatrixState.modelMatrix().rotate3d(-45, 1, 0, 0);
+			mMatrixState.cameraTransfrom().reset();
+			if (getObject3d().xrot != 0) {
+				mMatrixState.modelMatrix().rotate3d(getObject3d().xrot, 1, 0, 0);
+				mMatrixState.cameraTransfrom().rotate3d(-getObject3d().xrot, 1, 0, 0);
+			}
+			if (getObject3d().yrot != 0) {
+				mMatrixState.modelMatrix().rotate3d(getObject3d().yrot, 0, 1, 0);
+				mMatrixState.cameraTransfrom().rotate3d(-getObject3d().yrot, 0, 1, 0);
+			}
+			if (getObject3d().zrot != 0) {
+				mMatrixState.modelMatrix().rotate3d(getObject3d().zrot, 0, 0, 1);
+				mMatrixState.cameraTransfrom().rotate3d(getObject3d().zrot, 0, 0, 1);
+			}
+			
 			mMatrixState.updateMatrix();
+			
 			mShader.update();
 		}
 	}
@@ -126,6 +140,10 @@ public abstract class ModelBase {
 	    	mMatrixState.modelMatrix().rotate3d(-360 * stepx, 1, 0, 0);
 			mMatrixState.modelMatrix().rotate3d(-360 * stepy, 0, 1, 0);
 			mMatrixState.modelMatrix().rotate3d(-360 * stepz, 0, 0, 1);
+			mMatrixState.cameraTransfrom().reset();
+			mMatrixState.cameraTransfrom().rotate3d(360 * stepx, 1, 0, 0);
+			mMatrixState.cameraTransfrom().rotate3d(360 * stepy, 0, 1, 0);
+			mMatrixState.cameraTransfrom().rotate3d(-360 * stepz, 0, 0, 1);
 			mMatrixState.updateMatrix();
 			mShader.update();
 	    }

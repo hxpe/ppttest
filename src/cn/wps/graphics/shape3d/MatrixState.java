@@ -4,7 +4,7 @@ import android.graphics.RectF;
 import android.opengl.Matrix;
 
 public class MatrixState {
-	private final static float FOVY = 22.5f; // 透视投影视场角
+	private final static float FOVY = 45f; // 透视投影视场角
 	
 	private RectF mViewPort = new RectF();
     protected Matrix3D mTempMat = new Matrix3D();
@@ -15,6 +15,7 @@ public class MatrixState {
     protected Matrix3D mMatModel = new Matrix3D();
     protected Matrix3D mMatView = new Matrix3D();
     protected Matrix3D mMatTransform = new Matrix3D();
+    protected Matrix3D mCameraTransform = new Matrix3D(); // 为Camera校正的转换矩阵
     protected Matrix3D mMatMVP = new Matrix3D();
     protected Matrix3D mMatNormal = new Matrix3D();
     
@@ -51,6 +52,10 @@ public class MatrixState {
     
     public Matrix3D transfromMatrix() {
     	return mMatTransform;
+    }
+    
+    public Matrix3D cameraTransfrom() {
+    	return mCameraTransform;
     }
     
     protected void initPerspectiveMatrix() {

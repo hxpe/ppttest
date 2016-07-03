@@ -1,5 +1,6 @@
 package cn.wps.graphics.shape3d.shader2D;
 
+import cn.wps.graphics.shape3d.Matrix3D;
 import cn.wps.graphics.shape3d.ModelBase;
 import cn.wps.graphics.shape3d.Vector3f;
 import cn.wps.graphics.shape3d.Camera.Camera3D;
@@ -19,17 +20,26 @@ import android.util.Log;
 public class MainFaceRender extends Shader2DBase {
 	private Camera mCamera = new Camera();
     private Matrix mMatrix = new Matrix();
-    private Paint mPaint = new Paint();
+    private Paint mTextPaint = new Paint();
 	
 	private Camera3D mCamera3d = new Camera3D();
 	private Matrix mMatrix2 = new Matrix();
 	
-	public MainFaceRender(ModelBase model) {
+	private boolean mIsBackFace = false;
+	
+	public MainFaceRender(ModelBase model, boolean isBackFace) {
 		super(model);
+		mIsBackFace = isBackFace;
 	}
 	
 	@Override
 	public void init() {
+		if (!mIsBackFace) {
+			mTextPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+			mTextPaint.setTextSize(100);
+			mTextPaint.setColor(0xffff0000);
+		}
+		
 		mInited = true;
 	}
 	
@@ -40,21 +50,34 @@ public class MainFaceRender extends Shader2DBase {
 	
 	@Override
 	public void render(Canvas canvas) {
+		if (!mIsVisible) {
+			return;
+		}
 		long start = System.currentTimeMillis();
 		canvas.save();
-		canvas.concat(mMatrix);
+		canvas.concat(mMatrix2);
 		doBaseRender(canvas);
 		canvas.restore();
 		Log.d("MainFaceRender", "draw with camera " + (System.currentTimeMillis() - start));
 	}
 	
 	private void doBaseRender(Canvas canvas) {
-		Bitmap textureBimatp = mModel.getFrontTexture();
+		// 画正反面纹理
+		Bitmap textureBimatp = mIsBackFace ? mModel.getBackTexture() : mModel.getFrontTexture();
 		Shader s = new BitmapShader(textureBimatp, Shader.TileMode.CLAMP,
                 Shader.TileMode.CLAMP);
 		mPaint.setShader(s);
 		canvas.drawPath(mModel.getShapePath(), mPaint);
 		mPaint.setShader(null);
+		
+		// 正画些文本
+		if (!mIsBackFace) {
+			RectF viewPort = mModel.getMatrixState().getViewPort();
+			canvas.drawText("正面文本3D投影", 
+					viewPort.left, viewPort.centerY() - 55, mTextPaint);
+			canvas.drawText("测试abcdefgh12345678", 
+					viewPort.left, viewPort.centerY() + 55, mTextPaint);
+		}
 	}
 	
 	@Override
@@ -75,21 +98,39 @@ public class MainFaceRender extends Shader2DBase {
 		Vector3f topBottom = Vector3f.obtain().set2(viewPort.left, viewPort.bottom, 0);
 		Vector3f rightTop = Vector3f.obtain().set2(viewPort.right, viewPort.top, 0);
 		
+		if (mIsBackFace) {
+			float offset = getFaceOffset();
+			topLeft.subZ(offset);
+			topBottom.subZ(offset);
+			rightTop.subZ(offset);
+		}
+		
 		mModel.getMatrixState().projectionMap(topLeft, topLeft);
 		mModel.getMatrixState().projectionMap(topBottom, topBottom);
 		mModel.getMatrixState().projectionMap(rightTop, rightTop);
 		mIsVisible = isTriangleFront(topBottom, topLeft, rightTop);
-		
-		topLeft.recycle();
-		topBottom.recycle();
-		rightTop.recycle();
+		if (mIsBackFace) {
+			mIsVisible = !mIsVisible;
+		}
+	}
+	
+	protected float getFaceOffset() {
+		return mIsBackFace ? mModel.getObject3d().height : 0;
 	}
 	
 	private void updateCameraMatrix() {
 		mMatrix.reset();
 		mCamera.save();
 		mCamera.setLocation(0, 0, -mModel.getMatrixState().getEyez() / 72);
-		mCamera.rotateX(45);
+		if (mModel.getObject3d().xrot != 0) {
+			mCamera.rotateX(-mModel.getObject3d().xrot);
+		}
+		if (mModel.getObject3d().yrot != 0) {
+			mCamera.rotateY(mModel.getObject3d().yrot);
+		}
+		if (mModel.getObject3d().zrot != 0) {
+			mCamera.rotateZ(mModel.getObject3d().zrot);
+		}
 		mCamera.getMatrix(mMatrix);
 		RectF viewPort = mModel.getMatrixState().getViewPort();
 		mMatrix.preTranslate(-viewPort.width() / 2, -viewPort.height() / 2);
@@ -101,7 +142,11 @@ public class MainFaceRender extends Shader2DBase {
 		mMatrix2.reset();
 		mCamera3d.save();
 		mCamera3d.setLocation(0, 0, -mModel.getMatrixState().getEyez() / 72);
-		mCamera3d.getTransfromMatrix().setRotation3d(45, 1, 0, 0);
+		Matrix3D t = mCamera3d.getTransfromMatrix();
+		t.setMatrix(mModel.getMatrixState().cameraTransfrom());
+		if (mIsBackFace) {
+			t.translate3d(0, 0, mModel.getObject3d().height);
+		}
 		mCamera3d.getMatrix(mMatrix2);
 		RectF viewPort = mModel.getMatrixState().getViewPort();
 		mMatrix2.preTranslate(-viewPort.width() / 2, -viewPort.height() / 2);
