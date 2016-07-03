@@ -18,12 +18,10 @@ import android.util.Log;
  * 主面附加投影矩阵的渲染
  */
 public class MainFaceRender extends Shader2DBase {
-	private Camera mCamera = new Camera();
-    private Matrix mMatrix = new Matrix();
     private Paint mTextPaint = new Paint();
 	
 	private Camera3D mCamera3d = new Camera3D();
-	private Matrix mMatrix2 = new Matrix();
+	private Matrix mMatrix = new Matrix();
 	
 	private boolean mIsBackFace = false;
 	
@@ -55,7 +53,7 @@ public class MainFaceRender extends Shader2DBase {
 		}
 		long start = System.currentTimeMillis();
 		canvas.save();
-		canvas.concat(mMatrix2);
+		canvas.concat(mMatrix);
 		doBaseRender(canvas);
 		canvas.restore();
 		Log.d("MainFaceRender", "draw with camera " + (System.currentTimeMillis() - start));
@@ -87,7 +85,6 @@ public class MainFaceRender extends Shader2DBase {
 			return;
 		}
 		
-		updateCameraMatrix();
 		updateCameraMatrix2();
 	}
 	
@@ -118,28 +115,8 @@ public class MainFaceRender extends Shader2DBase {
 		return mIsBackFace ? mModel.getObject3d().height : 0;
 	}
 	
-	private void updateCameraMatrix() {
-		mMatrix.reset();
-		mCamera.save();
-		mCamera.setLocation(0, 0, -mModel.getMatrixState().getEyez() / 72);
-		if (mModel.getObject3d().xrot != 0) {
-			mCamera.rotateX(-mModel.getObject3d().xrot);
-		}
-		if (mModel.getObject3d().yrot != 0) {
-			mCamera.rotateY(mModel.getObject3d().yrot);
-		}
-		if (mModel.getObject3d().zrot != 0) {
-			mCamera.rotateZ(mModel.getObject3d().zrot);
-		}
-		mCamera.getMatrix(mMatrix);
-		RectF viewPort = mModel.getMatrixState().getViewPort();
-		mMatrix.preTranslate(-viewPort.width() / 2, -viewPort.height() / 2);
-		mMatrix.postTranslate(viewPort.height() / 2, viewPort.height() / 2);
-		mCamera.restore();
-	}
-	
 	private void updateCameraMatrix2() {
-		mMatrix2.reset();
+		mMatrix.reset();
 		mCamera3d.save();
 		mCamera3d.setLocation(0, 0, -mModel.getMatrixState().getEyez() / 72);
 		Matrix3D t = mCamera3d.getTransfromMatrix();
@@ -147,10 +124,10 @@ public class MainFaceRender extends Shader2DBase {
 		if (mIsBackFace) {
 			t.translate3d(0, 0, mModel.getObject3d().height);
 		}
-		mCamera3d.getMatrix(mMatrix2);
+		mCamera3d.getMatrix(mMatrix);
 		RectF viewPort = mModel.getMatrixState().getViewPort();
-		mMatrix2.preTranslate(-viewPort.width() / 2, -viewPort.height() / 2);
-		mMatrix2.postTranslate(viewPort.height() / 2, viewPort.height() / 2);
+		mMatrix.preTranslate(-viewPort.width() / 2, -viewPort.height() / 2);
+		mMatrix.postTranslate(viewPort.height() / 2, viewPort.height() / 2);
 		mCamera3d.restore();
 	}
 }
